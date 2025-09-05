@@ -1,0 +1,133 @@
+﻿@using Microsoft.AspNetCore.Http
+
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - StajyerTakip</title>
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/StajyerTakip.styles.css" asp-append-version="true" />
+
+    <style>
+        .navbar .nav-link.active {
+            font-weight: 600;
+            color: var(--bs-primary) !important;
+        }
+        main { min-height: 70vh; }
+    </style>
+
+    <script>
+        (function () {
+            const saved = localStorage.getItem('bsTheme');
+            const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const theme = saved || (prefersDark ? 'dark' : 'light');
+            document.documentElement.setAttribute('data-bs-theme', theme);
+        })();
+    </script>
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+            <div class="container-lg">
+                <a class="navbar-brand fw-semibold" asp-area="" asp-controller="Home" asp-action="Index">
+                    <i class="bi bi-journal-check me-1"></i> StajyerTakip
+                </a>
+
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar"
+                        aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div id="mainNavbar" class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                    <ul class="navbar-nav">
+                        @{
+                            string? c = ViewContext.RouteData.Values["controller"]?.ToString();
+                            string? a = ViewContext.RouteData.Values["action"]?.ToString();
+                            Func<string, string?, string> active = (ctrl, act) =>
+                                (c == ctrl && (act == null || a == act)) ? "active" : "text-dark";
+                        }
+                        <li class="nav-item">
+                            <a class="nav-link @active("Home","Index")" asp-controller="Home" asp-action="Index">
+                                <i class="bi bi-house-door me-1"></i> Home
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link @active("Home","Privacy")" asp-controller="Home" asp-action="Privacy">
+                                <i class="bi bi-shield-lock me-1"></i> Privacy
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link @active("Interns",null)" asp-controller="Interns" asp-action="Index">
+                                <i class="bi bi-people me-1"></i> Stajyerler
+                            </a>
+                        </li>
+                    </ul>
+
+                    <ul class="navbar-nav ms-auto align-items-center gap-2">
+                        <li class="nav-item">
+                            <button id="themeToggle" class="btn btn-outline-secondary btn-sm" type="button" title="Tema değiştir">
+                                <i class="bi bi-moon-stars"></i>
+                            </button>
+                        </li>
+
+                        @if (User?.Identity?.IsAuthenticated ?? false)
+                        {
+                            <li class="nav-item me-2">
+                                <span class="navbar-text">
+                                    <i class="bi bi-person-circle me-1"></i> @User.Identity!.Name
+                                </span>
+                            </li>
+                            <li class="nav-item">
+                                <a class="btn btn-outline-danger btn-sm" asp-controller="Account" asp-action="Logout">
+                                    <i class="bi bi-box-arrow-right me-1"></i> Çıkış
+                                </a>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="btn btn-outline-primary btn-sm" asp-controller="Account" asp-action="Login">
+                                    <i class="bi bi-box-arrow-in-right me-1"></i> Giriş
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container-lg">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted">
+        <div class="container-lg py-3 d-flex justify-content-between align-items-center">
+            <span>&copy; 2025 - StajyerTakip Uygulaması</span>
+            <small class="text-secondary">v1.0</small>
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+
+    <script>
+        document.getElementById('themeToggle')?.addEventListener('click', function () {
+            const html = document.documentElement;
+            const next = html.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-bs-theme', next);
+            localStorage.setItem('bsTheme', next);
+        });
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

@@ -1,0 +1,59 @@
+@model StajyerTakip.Models.Intern
+@{
+    ViewData["Title"] = "Stajyer Sil";
+    var badge = (Model.Status == "Aktif") ? "success" : "secondary";
+}
+
+<h2 class="h4 mb-3 text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i>Stajyer Sil</h2>
+
+<div class="card shadow-sm border-danger">
+  <div class="card-body">
+    <p class="mb-4">
+      Bu kaydı silmek istediğinize emin misiniz? <strong>Bu işlem geri alınamaz.</strong>
+    </p>
+
+    <div class="row g-3">
+      <div class="col-md-6">
+        <dl class="row mb-0">
+          <dt class="col-sm-4 text-muted">Ad Soyad</dt>
+          <dd class="col-sm-8 fw-semibold">@Model.FirstName @Model.LastName</dd>
+
+          <dt class="col-sm-4 text-muted">E-posta</dt>
+          <dd class="col-sm-8">
+            <a href="mailto:@Model.Email"><i class="bi bi-envelope me-1"></i>@Model.Email</a>
+          </dd>
+
+          <dt class="col-sm-4 text-muted">Durum</dt>
+          <dd class="col-sm-8"><span class="badge bg-@badge">@Model.Status</span></dd>
+        </dl>
+      </div>
+
+      <div class="col-md-6">
+        <dl class="row mb-0">
+          <dt class="col-sm-4 text-muted">TC Kimlik</dt>
+          <dd class="col-sm-8">@Model.NationalId</dd>
+
+          <dt class="col-sm-4 text-muted">Okul</dt>
+          <dd class="col-sm-8">@(!string.IsNullOrWhiteSpace(Model.School) ? Model.School : "—")</dd>
+
+          <dt class="col-sm-4 text-muted">Bölüm</dt>
+          <dd class="col-sm-8">@(!string.IsNullOrWhiteSpace(Model.Department) ? Model.Department : "—")</dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-footer bg-white d-flex justify-content-between">
+    <a asp-action="Index" class="btn btn-outline-secondary">
+      <i class="bi bi-arrow-left me-1"></i>Vazgeç
+    </a>
+
+    <form asp-action="Delete" method="post" class="d-inline">
+      @Html.AntiForgeryToken()
+      <input type="hidden" asp-for="Id" />
+      <button type="submit" class="btn btn-danger">
+        <i class="bi bi-trash me-1"></i>Sil
+      </button>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,70 @@
+@model StajyerTakip.Models.ViewModels.ImportResultVm
+@{
+    ViewData["Title"] = "CSV'den İçeri Aktar";
+}
+
+<h2 class="h4 mb-3">CSV'den İçeri Aktar</h2>
+
+<div class="mb-3">
+    <a class="btn btn-outline-secondary" asp-action="DownloadCsvTemplate">
+        <i class="bi bi-filetype-csv me-1"></i> Şablonu indir
+    </a>
+    <a class="btn btn-outline-secondary ms-2" asp-action="ExportCsv">
+        <i class="bi bi-download me-1"></i> Mevcut listeyi (CSV) indir
+    </a>
+</div>
+
+<form asp-action="UploadCsv" method="post" enctype="multipart/form-data" class="card shadow-sm">
+    <div class="card-body">
+        <div class="mb-3">
+            <label class="form-label">CSV Dosyası</label>
+            <input type="file" name="file" accept=".csv,text/csv" class="form-control" />
+            <div class="form-text">
+                Sütunlar: FirstName, LastName, NationalId, Email, Phone, School, Department, StartDate(yyyy-MM-dd), EndDate(yyyy-MM-dd, boş olabilir), Status(Aktif/Pasif)
+            </div>
+        </div>
+        <button class="btn btn-primary"><i class="bi bi-upload me-1"></i> Yükle</button>
+        <a class="btn btn-outline-secondary ms-2" asp-action="Index">Geri</a>
+    </div>
+</form>
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger mt-3">
+        @foreach (var m in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+        {
+            <div>@m.ErrorMessage</div>
+        }
+    </div>
+}
+
+@if (Model is not null && (Model.TotalRows > 0 || Model.Errors.Any()))
+{
+    <div class="card mt-3">
+        <div class="card-body">
+            <h5 class="card-title">Sonuç</h5>
+            <p class="mb-2">
+                Toplam satır: <strong>@Model.TotalRows</strong><br />
+                Eklenen: <strong class="text-success">@Model.Inserted</strong><br />
+                Atlanan/Hatalı: <strong class="text-danger">@Model.Skipped</strong>
+            </p>
+
+            @if (Model.Errors.Any())
+            {
+                <div class="alert alert-warning">
+                    <div class="fw-bold mb-2">Hatalar:</div>
+                    <ul class="mb-0">
+                        @foreach (var e in Model.Errors.Take(50))
+                        {
+                            <li>@e</li>
+                        }
+                    </ul>
+                    @if (Model.Errors.Count > 50)
+                    {
+                        <div class="small text-muted mt-2">Gösterilmeyen @(@Model.Errors.Count - 50) hata daha var.</div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+}

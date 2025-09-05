@@ -1,0 +1,283 @@
+@model StajyerTakip.Models.ViewModels.InternListVm
+@{
+    ViewData["Title"] = "Stajyerler";
+    var q = Model.Query;
+    var status = Model.Status;
+
+    var totalPages = Model.TotalPages;
+    var current = Model.Page;
+    var start = Math.Max(1, current - 2);
+    var end = Math.Min(totalPages, current + 2);
+
+    Func<string, string> ArrowIcon = field =>
+        (Model.SortField == field)
+            ? (Model.SortOrder == "asc"
+                ? "<i class='bi bi-caret-up-fill ms-1'></i>"
+                : "<i class='bi bi-caret-down-fill ms-1'></i>")
+            : "";
+}
+
+<style>
+    th a { text-decoration: none; color: inherit; }
+    th a:hover { color: #0d6efd; }
+
+    .pagination .page-link { color: #0d6efd; border-radius: 6px; }
+    .pagination .page-link:hover { background-color: #e9f3ff; color: #0a58ca; }
+    .pagination .page-item.active .page-link { background-color: #0d6efd; border-color: #0d6efd; color: #fff; }
+
+    [data-bs-theme="dark"] .table { color: #f8f9fa; }
+    [data-bs-theme="dark"] .table thead { background-color: #2c2c2c; }
+    [data-bs-theme="dark"] th a:hover { color: #66b2ff; }
+    [data-bs-theme="dark"] .pagination .page-link { color: #66b2ff; }
+    [data-bs-theme="dark"] .pagination .page-link:hover { background-color: #1c1f24; color: #99ccff; }
+    [data-bs-theme="dark"] .page-item.active .page-link { background-color: #0d6efd; border-color: #0d6efd; }
+</style>
+
+<h2 class="h4 mb-3">Stajyerler</h2>
+
+<form method="get" class="row g-2 align-items-end mb-3">
+    <div class="col-md-6">
+        <label class="form-label">Ara</label>
+        <input name="q" value="@q" class="form-control" placeholder="Ad, soyad, email, okul, bölüm, telefon..." />
+    </div>
+
+    <div class="col-md-3">
+        <label class="form-label">Durum</label>
+        <select name="status" class="form-select">
+            <option value="">(Tümü)</option>
+            <option value="Aktif" selected="@(status=="Aktif")">Aktif</option>
+            <option value="Pasif" selected="@(status=="Pasif")">Pasif</option>
+        </select>
+    </div>
+
+    <div class="col-md-3">
+        <label class="form-label">Sayfa Boyutu</label>
+        <select name="pageSize" class="form-select">
+            @foreach (var s in new[]{5,10,20,50})
+            {
+                <option value="@s" selected="@(Model.PageSize==s)">@s</option>
+            }
+        </select>
+    </div>
+
+    <div class="col-md-3 d-grid">
+        <button class="btn btn-primary"><i class="bi bi-funnel me-1"></i>Filtrele</button>
+    </div>
+</form>
+
+<div class="mb-3 d-flex justify-content-between align-items-center">
+    <div class="text-muted small">
+        Toplam <strong>@Model.TotalCount</strong> kayıt
+    </div>
+    <div class="d-flex flex-wrap gap-2">
+        <a class="btn btn-outline-secondary"
+           asp-action="ExportCsv"
+           asp-route-q="@Model.Query"
+           asp-route-status="@Model.Status"
+           asp-route-sortField="@Model.SortField"
+           asp-route-sortOrder="@Model.SortOrder">
+            <i class="bi bi-download me-1"></i> Dışa Aktar (CSV)
+        </a>
+
+        <a class="btn btn-outline-secondary"
+           asp-action="ExportXlsx"
+           asp-route-q="@Model.Query"
+           asp-route-status="@Model.Status"
+           asp-route-sortField="@Model.SortField"
+           asp-route-sortOrder="@Model.SortOrder">
+            <i class="bi bi-file-earmark-excel me-1"></i> Dışa Aktar (Excel)
+        </a>
+
+        @if (User.IsInRole("Admin"))
+        {
+            <a class="btn btn-outline-secondary"
+               asp-action="UploadCsv">
+                <i class="bi bi-upload me-1"></i> İçe Aktar (CSV)
+            </a>
+
+            <a class="btn btn-outline-secondary"
+               asp-action="DownloadCsvTemplate">
+                <i class="bi bi-filetype-csv me-1"></i> Şablon (CSV)
+            </a>
+        }
+
+        <a class="btn btn-success" asp-action="Create">
+            <i class="bi bi-plus-circle me-1"></i>Yeni Stajyer
+        </a>
+    </div>
+</div>
+
+@if (Model.Items.Any())
+{
+    <table class="table table-hover align-middle shadow-sm bg-white rounded">
+        <thead class="table-light">
+            <tr>
+                <th class="@(Model.SortField=="FirstName" ? "fw-bold text-primary" : "")">
+                    <a asp-action="Index"
+                       asp-route-sortField="FirstName"
+                       asp-route-sortOrder="@(Model.SortField=="FirstName" && Model.SortOrder=="asc" ? "desc" : "asc")"
+                       asp-route-q="@Model.Query"
+                       asp-route-status="@Model.Status"
+                       asp-route-page="@Model.Page"
+                       asp-route-pageSize="@Model.PageSize">
+                        Ad @Html.Raw(ArrowIcon("FirstName"))
+                    </a>
+                </th>
+                <th class="@(Model.SortField=="LastName" ? "fw-bold text-primary" : "")">
+                    <a asp-action="Index"
+                       asp-route-sortField="LastName"
+                       asp-route-sortOrder="@(Model.SortField=="LastName" && Model.SortOrder=="asc" ? "desc" : "asc")"
+                       asp-route-q="@Model.Query"
+                       asp-route-status="@Model.Status"
+                       asp-route-page="@Model.Page"
+                       asp-route-pageSize="@Model.PageSize">
+                        Soyad @Html.Raw(ArrowIcon("LastName"))
+                    </a>
+                </th>
+                <th>TC</th>
+                <th class="@(Model.SortField=="Email" ? "fw-bold text-primary" : "")">
+                    <a asp-action="Index"
+                       asp-route-sortField="Email"
+                       asp-route-sortOrder="@(Model.SortField=="Email" && Model.SortOrder=="asc" ? "desc" : "asc")"
+                       asp-route-q="@Model.Query"
+                       asp-route-status="@Model.Status"
+                       asp-route-page="@Model.Page"
+                       asp-route-pageSize="@Model.PageSize">
+                        Email @Html.Raw(ArrowIcon("Email"))
+                    </a>
+                </th>
+                <th class="@(Model.SortField=="School" ? "fw-bold text-primary" : "")">
+                    <a asp-action="Index"
+                       asp-route-sortField="School"
+                       asp-route-sortOrder="@(Model.SortField=="School" && Model.SortOrder=="asc" ? "desc" : "asc")"
+                       asp-route-q="@Model.Query"
+                       asp-route-status="@Model.Status"
+                       asp-route-page="@Model.Page"
+                       asp-route-pageSize="@Model.PageSize">
+                        Okul @Html.Raw(ArrowIcon("School"))
+                    </a>
+                </th>
+                <th class="@(Model.SortField=="Department" ? "fw-bold text-primary" : "")">
+                    <a asp-action="Index"
+                       asp-route-sortField="Department"
+                       asp-route-sortOrder="@(Model.SortField=="Department" && Model.SortOrder=="asc" ? "desc" : "asc")"
+                       asp-route-q="@Model.Query"
+                       asp-route-status="@Model.Status"
+                       asp-route-page="@Model.Page"
+                       asp-route-pageSize="@Model.PageSize">
+                        Bölüm @Html.Raw(ArrowIcon("Department"))
+                    </a>
+                </th>
+                <th class="@(Model.SortField=="Status" ? "fw-bold text-primary" : "")">
+                    <a asp-action="Index"
+                       asp-route-sortField="Status"
+                       asp-route-sortOrder="@(Model.SortField=="Status" && Model.SortOrder=="asc" ? "desc" : "asc")"
+                       asp-route-q="@Model.Query"
+                       asp-route-status="@Model.Status"
+                       asp-route-page="@Model.Page"
+                       asp-route-pageSize="@Model.PageSize">
+                        Durum @Html.Raw(ArrowIcon("Status"))
+                    </a>
+                </th>
+                <th class="text-end">İşlemler</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var i in Model.Items)
+        {
+            var badge = (i.Status == "Aktif") ? "success" : "secondary";
+            <tr>
+                <td>@i.FirstName</td>
+                <td>@i.LastName</td>
+                <td class="text-muted small">@i.NationalId</td>
+                <td><a href="mailto:@i.Email">@i.Email</a></td>
+                <td>@i.School</td>
+                <td>@i.Department</td>
+                <td><span class="badge bg-@badge">@i.Status</span></td>
+                <td class="text-end">
+                    <a asp-action="Details" asp-route-id="@i.Id" class="btn btn-sm btn-outline-info me-1" title="Detay">
+                        <i class="bi bi-eye"></i>
+                    </a>
+                    <a asp-action="Edit" asp-route-id="@i.Id" class="btn btn-sm btn-outline-warning me-1" title="Düzenle">
+                        <i class="bi bi-pencil-square"></i>
+                    </a>
+                    <a asp-action="Delete" asp-route-id="@i.Id" class="btn btn-sm btn-outline-danger" title="Sil">
+                        <i class="bi bi-trash"></i>
+                    </a>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+
+    <nav aria-label="Sayfalama">
+        <ul class="pagination justify-content-center">
+            <li class="page-item @(current == 1 ? "disabled" : "")">
+                <a class="page-link"
+                   asp-action="Index"
+                   asp-route-page="@(current - 1)"
+                   asp-route-pageSize="@Model.PageSize"
+                   asp-route-q="@Model.Query"
+                   asp-route-status="@Model.Status"
+                   asp-route-sortField="@Model.SortField"
+                   asp-route-sortOrder="@Model.SortOrder">Önceki</a>
+            </li>
+
+            @if (start > 1)
+            {
+                <li class="page-item">
+                    <a class="page-link" asp-action="Index" asp-route-page="1"
+                       asp-route-pageSize="@Model.PageSize" asp-route-q="@Model.Query" asp-route-status="@Model.Status"
+                       asp-route-sortField="@Model.SortField" asp-route-sortOrder="@Model.SortOrder">1</a>
+                </li>
+                @if (start > 2)
+                {
+                    <li class="page-item disabled"><span class="page-link">…</span></li>
+                }
+            }
+
+            @for (int p = start; p <= end; p++)
+            {
+                <li class="page-item @(p == current ? "active" : "")">
+                    <a class="page-link" asp-action="Index"
+                       asp-route-page="@p"
+                       asp-route-pageSize="@Model.PageSize"
+                       asp-route-q="@Model.Query"
+                       asp-route-status="@Model.Status"
+                       asp-route-sortField="@Model.SortField"
+                       asp-route-sortOrder="@Model.SortOrder">@p</a>
+                </li>
+            }
+
+            @if (end < totalPages)
+            {
+                @if (end < totalPages - 1)
+                {
+                    <li class="page-item disabled"><span class="page-link">…</span></li>
+                }
+                <li class="page-item">
+                    <a class="page-link" asp-action="Index" asp-route-page="@totalPages"
+                       asp-route-pageSize="@Model.PageSize" asp-route-q="@Model.Query" asp-route-status="@Model.Status"
+                       asp-route-sortField="@Model.SortField" asp-route-sortOrder="@Model.SortOrder">@totalPages</a>
+                </li>
+            }
+
+            <li class="page-item @(current == totalPages || totalPages == 0 ? "disabled" : "")">
+                <a class="page-link"
+                   asp-action="Index"
+                   asp-route-page="@(current + 1)"
+                   asp-route-pageSize="@Model.PageSize"
+                   asp-route-q="@Model.Query"
+                   asp-route-status="@Model.Status"
+                   asp-route-sortField="@Model.SortField"
+                   asp-route-sortOrder="@Model.SortOrder">Sonraki</a>
+            </li>
+        </ul>
+    </nav>
+}
+else
+{
+    <div class="alert alert-info">
+        <i class="bi bi-info-circle me-1"></i> Henüz stajyer kaydı yok.
+    </div>
+}
