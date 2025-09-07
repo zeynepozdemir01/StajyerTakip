@@ -1,7 +1,10 @@
 # StajyerTakip Uygulaması
 
+**Repo Linki:** [https://github.com/zeynepozdemir01/StajyerTakip](https://github.com/zeynepozdemir01/StajyerTakip)
+
 Bu proje, stajyer yönetimini kolaylaştırmak amacıyla geliştirilmiş bir **ASP.NET Core MVC** uygulamasıdır.  
 Stajyerlerin bilgilerini kayıt altına almak, listelemek, düzenlemek ve dışa/içe aktarmak için kullanılabilir.  
+
 
 ---
 
