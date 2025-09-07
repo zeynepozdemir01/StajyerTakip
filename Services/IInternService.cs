@@ -1,20 +1,23 @@
-using StajyerTakip.Models;
-using StajyerTakip.Models.ViewModels;
+using StajyerTakip.Domain.Entities;
 
-namespace StajyerTakip.Services
+namespace StajyerTakip.Services;
+
+public sealed class PaginatedResult<T>
 {
-    public interface IInternService
-    {
-        Task<PaginatedResult<Intern>> ListAsync(
-            string? q, string? status, int page, int pageSize,
-            string sortField, string sortOrder);
+    public IReadOnlyList<T> Items { get; init; } = Array.Empty<T>();
+    public int Page { get; init; }
+    public int PageSize { get; init; }
+    public int TotalCount { get; init; }
+}
 
-        Task<Intern?> GetAsync(int id);
+public interface IInternService
+{
+    Task<PaginatedResult<Intern>> ListAsync(
+        string? q, string? status, int page, int pageSize, string sortField, string sortOrder);
 
-        Task<(bool Ok, string? Error)> CreateAsync(Intern model);
+    Task<Intern?> GetAsync(int id);
 
-        Task<(bool Ok, string? Error)> UpdateAsync(Intern model);
-
-        Task<bool> DeleteAsync(int id);
-    }
+    Task<(bool ok, string? error)> CreateAsync(Intern model);
+    Task<(bool ok, string? error)> UpdateAsync(Intern model);
+    Task<bool> DeleteAsync(int id);
 }

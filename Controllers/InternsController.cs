@@ -1,12 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using StajyerTakip.Models;
-using StajyerTakip.Models.ViewModels;
-using StajyerTakip.Services;
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.Text;
 using ClosedXML.Excel;
+
+using StajyerTakip.Services;          
+using StajyerTakip.Domain.Entities;   
 
 namespace StajyerTakip.Controllers
 {
@@ -26,14 +26,14 @@ namespace StajyerTakip.Controllers
         {
             var result = await _svc.ListAsync(q, status, page, pageSize, sortField, sortOrder);
 
-            var vm = new InternListVm
+            var vm = new Models.ViewModels.InternListVm
             {
-                Items = result.Items,
-                Page = result.Page,
-                PageSize = result.PageSize,
-                TotalCount = result.TotalCount,
-                Query = q,
-                Status = status,
+                Items     = result.Items,
+                Page      = result.Page,
+                PageSize  = result.PageSize,
+                TotalCount= result.TotalCount,
+                Query     = q,
+                Status    = status,
                 SortField = sortField,
                 SortOrder = sortOrder
             };
@@ -54,8 +54,7 @@ namespace StajyerTakip.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Intern model)
         {
-            if (!ModelState.IsValid)
-                return View(model);
+            if (!ModelState.IsValid) return View(model);
 
             var (ok, error) = await _svc.CreateAsync(model);
             if (!ok)
@@ -107,16 +106,14 @@ namespace StajyerTakip.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-
         [HttpGet]
         public async Task<IActionResult> ExportCsv(
-            string? q,
-            string? status,
+            string? q, string? status,
             string sortField = "LastName",
             string sortOrder = "asc")
         {
-            const int Huge = 1_000_000; 
-            var result = await _svc.ListAsync(q, status, page: 1, pageSize: Huge, sortField, sortOrder);
+            const int Huge = 1_000_000;
+            var result = await _svc.ListAsync(q, status, 1, Huge, sortField, sortOrder);
 
             static string CsvEsc(string? s)
             {
@@ -147,27 +144,27 @@ namespace StajyerTakip.Controllers
                 ));
             }
 
-            var bytes = new UTF8Encoding(encoderShouldEmitUTF8Identifier: true).GetBytes(sb.ToString());
+            var bytes = new UTF8Encoding(true).GetBytes(sb.ToString());
             var fileName = $"stajyerler_{DateTime.Now:yyyyMMdd_HHmm}.csv";
             return File(bytes, "text/csv; charset=utf-8", fileName);
         }
 
         [HttpGet]
         public async Task<IActionResult> ExportXlsx(
-            string? q,
-            string? status,
+            string? q, string? status,
             string sortField = "LastName",
             string sortOrder = "asc")
         {
             const int Huge = 1_000_000;
-            var result = await _svc.ListAsync(q, status, page: 1, pageSize: Huge, sortField, sortOrder);
+            var result = await _svc.ListAsync(q, status, 1, Huge, sortField, sortOrder);
 
             using var wb = new XLWorkbook();
             var ws = wb.Worksheets.Add("Stajyerler");
 
             var headers = new[]
             {
-                "Id","Ad","Soyad","TC Kimlik","Email","Telefon","Okul","Bölüm","Başlangıç","Bitiş","Durum"
+                "Id","Ad","Soyad","TC Kimlik","Email","Telefon",
+                "Okul","Bölüm","Başlangıç","Bitiş","Durum"
             };
             for (int c = 0; c < headers.Length; c++)
                 ws.Cell(1, c + 1).Value = headers[c];
@@ -183,21 +180,20 @@ namespace StajyerTakip.Controllers
                 ws.Cell(r, 6).Value = i.Phone ?? "";
                 ws.Cell(r, 7).Value = i.School ?? "";
                 ws.Cell(r, 8).Value = i.Department ?? "";
-
                 ws.Cell(r, 9).Value = i.StartDate.ToDateTime(TimeOnly.MinValue);
                 ws.Cell(r, 9).Style.DateFormat.Format = "yyyy-mm-dd";
 
                 if (i.EndDate.HasValue)
                 {
-                    ws.Cell(r, 10).Value = i.EndDate.Value.ToDateTime(TimeOnly.MinValue);
-                    ws.Cell(r, 10).Style.DateFormat.Format = "yyyy-mm-dd";
+                    ws.Cell(r,10).Value = i.EndDate.Value.ToDateTime(TimeOnly.MinValue);
+                    ws.Cell(r,10).Style.DateFormat.Format = "yyyy-mm-dd";
                 }
                 else
                 {
-                    ws.Cell(r, 10).Value = "";
+                    ws.Cell(r,10).Value = "";
                 }
 
-                ws.Cell(r, 11).Value = i.Status;
+                ws.Cell(r,11).Value = i.Status;
                 r++;
             }
 
@@ -213,11 +209,11 @@ namespace StajyerTakip.Controllers
             wb.SaveAs(ms);
             var bytes = ms.ToArray();
             var fileName = $"stajyerler_{DateTime.Now:yyyyMMdd_HHmm}.xlsx";
-            return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+            return File(bytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                fileName);
         }
 
-
-        [HttpGet]
         [Authorize(Roles = "Admin")]
         public IActionResult DownloadCsvTemplate()
         {
@@ -226,7 +222,6 @@ namespace StajyerTakip.Controllers
             return File(bytes, "text/csv; charset=utf-8", "stajyer_sablon.csv");
         }
 
-        [HttpGet]
         [Authorize(Roles = "Admin")]
         public IActionResult UploadCsv() => View();
 
@@ -235,7 +230,7 @@ namespace StajyerTakip.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UploadCsv(IFormFile? file)
         {
-            var result = new ImportResultVm();
+            var result = new Models.ViewModels.ImportResultVm();
 
             if (file is null || file.Length == 0)
             {
@@ -262,14 +257,11 @@ namespace StajyerTakip.Controllers
             {
                 line = await reader.ReadLineAsync();
                 lineNo++;
-
-                if (string.IsNullOrWhiteSpace(line))
-                    continue;
+                if (string.IsNullOrWhiteSpace(line)) continue;
 
                 result.TotalRows++;
 
                 var parts = SplitCsvLine(line);
-
                 if (parts.Length < 10)
                 {
                     result.Skipped++;
@@ -314,7 +306,7 @@ namespace StajyerTakip.Controllers
 
                 var ctx = new ValidationContext(model);
                 var validationResults = new List<ValidationResult>();
-                if (!Validator.TryValidateObject(model, ctx, validationResults, validateAllProperties: true))
+                if (!Validator.TryValidateObject(model, ctx, validationResults, true))
                 {
                     result.Skipped++;
                     var msgs = string.Join("; ", validationResults.Select(v => v.ErrorMessage));
@@ -336,7 +328,6 @@ namespace StajyerTakip.Controllers
 
             return View(result);
 
-            // --- helpers ---
             static string? EmptyToNull(string? s) => string.IsNullOrWhiteSpace(s) ? null : s;
 
             static bool TryParseDateOnly(string? s, out DateOnly value)
@@ -364,7 +355,7 @@ namespace StajyerTakip.Controllers
                 {
                     var cell = raw[i].Trim();
                     if (cell.StartsWith("\"") && cell.EndsWith("\"") && cell.Length >= 2)
-                        cell = cell.Substring(1, cell.Length - 2).Replace("\"\"", "\"");
+                        cell = cell[1..^1].Replace("\"\"", "\"");
                     raw[i] = cell;
                 }
                 return raw;

@@ -1,4 +1,5 @@
-using StajyerTakip.Models;
+using StajyerTakip.Infrastructure.Data;
+using StajyerTakip.Domain.Entities;
 
 namespace StajyerTakip.Data
 {
@@ -35,7 +36,7 @@ namespace StajyerTakip.Data
                 },
                 new Intern {
                     FirstName="Elif", LastName="Çelik", NationalId="12345678904",
-                    Email="elif.celik@example.com",
+                    Email="elif.celik@example.com",Phone="05005699230",
                     School="Boğaziçi", Department="Yönetim Bilişim Sistemleri",
                     StartDate=today.AddDays(-15), EndDate=null, Status="Aktif",
                     CreatedAt=DateTime.UtcNow, UpdatedAt=DateTime.UtcNow

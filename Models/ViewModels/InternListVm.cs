@@ -1,3 +1,5 @@
+using StajyerTakip.Domain.Entities;
+
 namespace StajyerTakip.Models.ViewModels
 {
     public class InternListVm
@@ -9,9 +11,8 @@ namespace StajyerTakip.Models.ViewModels
         public string? Query { get; set; }
         public string? Status { get; set; }
 
-        // 📌 yeni eklenen özellikler (sıralama için)
         public string? SortField { get; set; }
-        public string? SortOrder { get; set; } // "asc" veya "desc"
+        public string? SortOrder { get; set; } 
 
         public int TotalPages => (int)Math.Ceiling((double)TotalCount / PageSize);
     }
