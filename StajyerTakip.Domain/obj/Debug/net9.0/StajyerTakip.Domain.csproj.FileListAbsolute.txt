@@ -1,0 +1,12 @@
+/Users/zeynepozdemir/StajyerTakip/StajyerTakip.Domain/bin/Debug/net9.0/StajyerTakip.Domain.deps.json
+/Users/zeynepozdemir/StajyerTakip/StajyerTakip.Domain/bin/Debug/net9.0/StajyerTakip.Domain.dll
+/Users/zeynepozdemir/StajyerTakip/StajyerTakip.Domain/bin/Debug/net9.0/StajyerTakip.Domain.pdb
+/Users/zeynepozdemir/StajyerTakip/StajyerTakip.Domain/obj/Debug/net9.0/StajyerTakip.Domain.GeneratedMSBuildEditorConfig.editorconfig
+/Users/zeynepozdemir/StajyerTakip/StajyerTakip.Domain/obj/Debug/net9.0/StajyerTakip.Domain.AssemblyInfoInputs.cache
+/Users/zeynepozdemir/StajyerTakip/StajyerTakip.Domain/obj/Debug/net9.0/StajyerTakip.Domain.AssemblyInfo.cs
+/Users/zeynepozdemir/StajyerTakip/StajyerTakip.Domain/obj/Debug/net9.0/StajyerTakip.Domain.csproj.CoreCompileInputs.cache
+/Users/zeynepozdemir/StajyerTakip/StajyerTakip.Domain/obj/Debug/net9.0/StajyerTakip.Domain.sourcelink.json
+/Users/zeynepozdemir/StajyerTakip/StajyerTakip.Domain/obj/Debug/net9.0/StajyerTakip.Domain.dll
+/Users/zeynepozdemir/StajyerTakip/StajyerTakip.Domain/obj/Debug/net9.0/refint/StajyerTakip.Domain.dll
+/Users/zeynepozdemir/StajyerTakip/StajyerTakip.Domain/obj/Debug/net9.0/StajyerTakip.Domain.pdb
+/Users/zeynepozdemir/StajyerTakip/StajyerTakip.Domain/obj/Debug/net9.0/ref/StajyerTakip.Domain.dll

@@ -1,117 +1,67 @@
-using Microsoft.EntityFrameworkCore;
-using StajyerTakip.Data;
-using StajyerTakip.Models;
-using StajyerTakip.Models.ViewModels;
+using System.ComponentModel.DataAnnotations;
+using StajyerTakip.Application.Interfaces;
+using StajyerTakip.Domain.Entities;
 
-namespace StajyerTakip.Services
+namespace StajyerTakip.Services;
+
+public sealed class InternService : IInternService
 {
-    public class InternService : IInternService
+    private readonly IInternRepository _repo;
+    public InternService(IInternRepository repo) => _repo = repo;
+
+    public async Task<PaginatedResult<Intern>> ListAsync(
+        string? q, string? status, int page, int pageSize, string sortField, string sortOrder)
     {
-        private readonly AppDbContext _db;
-        public InternService(AppDbContext db) => _db = db;
-
-        public async Task<PaginatedResult<Intern>> ListAsync(
-            string? q, string? status, int page, int pageSize,
-            string sortField, string sortOrder)
+        var (items, total) = await _repo.ListAsync(q, status, page, pageSize, sortField, sortOrder);
+        return new PaginatedResult<Intern>
         {
-            if (page < 1) page = 1;
-            if (pageSize < 1) pageSize = 10;
+            Items = items,
+            Page = page,
+            PageSize = pageSize,
+            TotalCount = total
+        };
+    }
 
-            var query = _db.Interns.AsQueryable();
+    public Task<Intern?> GetAsync(int id) => _repo.GetByIdAsync(id);
 
-            if (!string.IsNullOrWhiteSpace(q))
-            {
-                query = query.Where(i =>
-                    i.FirstName.Contains(q) || i.LastName.Contains(q) ||
-                    i.Email.Contains(q) ||
-                    (i.Phone != null && i.Phone.Contains(q)) ||
-                    (i.School != null && i.School.Contains(q)) ||
-                    (i.Department != null && i.Department.Contains(q)));
-            }
+    public async Task<(bool ok, string? error)> CreateAsync(Intern model)
+    {
+        var ctx = new ValidationContext(model);
+        var results = new List<ValidationResult>();
+        if (!Validator.TryValidateObject(model, ctx, results, validateAllProperties: true))
+            return (false, string.Join("; ", results.Select(r => r.ErrorMessage)));
 
-            if (!string.IsNullOrWhiteSpace(status))
-                query = query.Where(i => i.Status == status);
+        await _repo.AddAsync(model);
+        await _repo.SaveChangesAsync();
+        return (true, null);
+    }
 
-            bool asc = sortOrder?.ToLower() != "desc";
-            query = sortField switch
-            {
-                "FirstName"  => asc ? query.OrderBy(i => i.FirstName)   : query.OrderByDescending(i => i.FirstName),
-                "LastName"   => asc ? query.OrderBy(i => i.LastName)    : query.OrderByDescending(i => i.LastName),
-                "Email"      => asc ? query.OrderBy(i => i.Email)       : query.OrderByDescending(i => i.Email),
-                "School"     => asc ? query.OrderBy(i => i.School)      : query.OrderByDescending(i => i.School),
-                "Department" => asc ? query.OrderBy(i => i.Department)  : query.OrderByDescending(i => i.Department),
-                "Status"     => asc ? query.OrderBy(i => i.Status)      : query.OrderByDescending(i => i.Status),
-                _            => asc ? query.OrderBy(i => i.LastName).ThenBy(i => i.FirstName)
-                                    : query.OrderByDescending(i => i.LastName).ThenByDescending(i => i.FirstName)
-            };
+    public async Task<(bool ok, string? error)> UpdateAsync(Intern model)
+    {
+        var existing = await _repo.GetByIdAsync(model.Id);
+        if (existing is null) return (false, "Kayıt bulunamadı.");
 
-            var total = await query.CountAsync();
-            var items = await query.AsNoTracking()
-                                   .Skip((page - 1) * pageSize)
-                                   .Take(pageSize)
-                                   .ToListAsync();
+        existing.FirstName  = model.FirstName;
+        existing.LastName   = model.LastName;
+        existing.NationalId = model.NationalId;
+        existing.Email      = model.Email;
+        existing.Phone      = model.Phone;
+        existing.School     = model.School;
+        existing.Department = model.Department;
+        existing.StartDate  = model.StartDate;
+        existing.EndDate    = model.EndDate;
+        existing.Status     = model.Status;
+        existing.UpdatedAt  = DateTime.UtcNow;
 
-            return new PaginatedResult<Intern>(items, total, page, pageSize);
-        }
+        _repo.Update(existing);
+        await _repo.SaveChangesAsync();
+        return (true, null);
+    }
 
-        public Task<Intern?> GetAsync(int id)
-            => _db.Interns.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id)!;
-
-        public async Task<(bool Ok, string? Error)> CreateAsync(Intern model)
-        {
-            if (model.EndDate.HasValue && model.EndDate.Value < model.StartDate)
-                return (false, "Bitiş tarihi başlangıçtan önce olamaz.");
-
-            var existsNat  = await _db.Interns.AnyAsync(i => i.NationalId == model.NationalId);
-            if (existsNat) return (false, "TC Kimlik No benzersiz olmalıdır.");
-
-            var existsMail = await _db.Interns.AnyAsync(i => i.Email == model.Email);
-            if (existsMail) return (false, "E-posta benzersiz olmalıdır.");
-
-            model.CreatedAt = DateTime.UtcNow;
-            model.UpdatedAt = DateTime.UtcNow;
-
-            _db.Interns.Add(model); 
-            return await SaveWithCatch();
-        }
-
-        public async Task<(bool Ok, string? Error)> UpdateAsync(Intern model)
-        {
-            if (model.EndDate.HasValue && model.EndDate.Value < model.StartDate)
-                return (false, "Bitiş tarihi başlangıçtan önce olamaz.");
-
-            var existsNat  = await _db.Interns.AnyAsync(i => i.NationalId == model.NationalId && i.Id != model.Id);
-            if (existsNat) return (false, "TC Kimlik No benzersiz olmalıdır.");
-
-            var existsMail = await _db.Interns.AnyAsync(i => i.Email == model.Email && i.Id != model.Id);
-            if (existsMail) return (false, "E-posta benzersiz olmalıdır.");
-
-            model.UpdatedAt = DateTime.UtcNow;
-            _db.Entry(model).State = EntityState.Modified;
-
-            return await SaveWithCatch();
-        }
-
-        public async Task<bool> DeleteAsync(int id)
-        {
-            var m = await _db.Interns.FindAsync(id);
-            if (m is null) return false;
-            _db.Interns.Remove(m);
-            await _db.SaveChangesAsync();
-            return true;
-        }
-
-        private async Task<(bool Ok, string? Error)> SaveWithCatch()
-        {
-            try
-            {
-                await _db.SaveChangesAsync();
-                return (true, null);
-            }
-            catch (DbUpdateException)
-            {
-                return (false, "Veri kaydedilirken bir hata oluştu. (Benzersizlik veya veri kısıtı)");
-            }
-        }
+    public async Task<bool> DeleteAsync(int id)
+    {
+        await _repo.DeleteAsync(id);
+        var affected = await _repo.SaveChangesAsync();
+        return affected > 0;
     }
 }

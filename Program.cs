@@ -1,7 +1,11 @@
 using Microsoft.EntityFrameworkCore;
-using StajyerTakip.Data;
-using Microsoft.AspNetCore.Authentication.Cookies; 
+using Microsoft.AspNetCore.Authentication.Cookies;
+
+using StajyerTakip.Infrastructure.Data;     
+using StajyerTakip.Application.Interfaces;
+using StajyerTakip.Infrastructure.Repositories;
 using StajyerTakip.Services;
+using StajyerTakip.Data;                    
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +14,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddControllersWithViews();
 
+builder.Services.AddScoped<IInternRepository, InternRepository>();
 builder.Services.AddScoped<IInternService, InternService>();
 
 builder.Services
@@ -29,7 +34,8 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await DbSeeder.SeedAsync(db); 
+    await db.Database.MigrateAsync();   
+    await DbSeeder.SeedAsync(db);       
 }
 
 if (!app.Environment.IsDevelopment())
