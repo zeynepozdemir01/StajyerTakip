@@ -1,5 +1,5 @@
-using System.ComponentModel.DataAnnotations;
-using StajyerTakip.Application.Interfaces;
+using StajyerTakip.Application.Common;     // PaginatedResult
+using StajyerTakip.Application.Interfaces; // IInternRepository
 using StajyerTakip.Domain.Entities;
 
 namespace StajyerTakip.Services;
@@ -13,55 +13,49 @@ public sealed class InternService : IInternService
         string? q, string? status, int page, int pageSize, string sortField, string sortOrder)
     {
         var (items, total) = await _repo.ListAsync(q, status, page, pageSize, sortField, sortOrder);
-        return new PaginatedResult<Intern>
-        {
-            Items = items,
-            Page = page,
-            PageSize = pageSize,
-            TotalCount = total
-        };
+        // PaginatedResult ctor: (items, totalCount, page, pageSize)
+        return new PaginatedResult<Intern>(items, total, page, pageSize);
     }
 
-    public Task<Intern?> GetAsync(int id) => _repo.GetByIdAsync(id);
+    public Task<Intern?> GetAsync(int id)
+        => _repo.GetByIdAsync(id);
 
     public async Task<(bool ok, string? error)> CreateAsync(Intern model)
     {
-        var ctx = new ValidationContext(model);
-        var results = new List<ValidationResult>();
-        if (!Validator.TryValidateObject(model, ctx, results, validateAllProperties: true))
-            return (false, string.Join("; ", results.Select(r => r.ErrorMessage)));
-
-        await _repo.AddAsync(model);
-        await _repo.SaveChangesAsync();
-        return (true, null);
+        try
+        {
+            var id = await _repo.AddAsync(model);   // int döner (eklenen kaydın Id'si)
+            return (id > 0, id > 0 ? null : "Kayıt oluşturulamadı.");
+        }
+        catch (Exception ex)
+        {
+            return (false, ex.Message);
+        }
     }
 
     public async Task<(bool ok, string? error)> UpdateAsync(Intern model)
     {
-        var existing = await _repo.GetByIdAsync(model.Id);
-        if (existing is null) return (false, "Kayıt bulunamadı.");
-
-        existing.FirstName  = model.FirstName;
-        existing.LastName   = model.LastName;
-        existing.NationalId = model.NationalId;
-        existing.Email      = model.Email;
-        existing.Phone      = model.Phone;
-        existing.School     = model.School;
-        existing.Department = model.Department;
-        existing.StartDate  = model.StartDate;
-        existing.EndDate    = model.EndDate;
-        existing.Status     = model.Status;
-        existing.UpdatedAt  = DateTime.UtcNow;
-
-        _repo.Update(existing);
-        await _repo.SaveChangesAsync();
-        return (true, null);
+        try
+        {
+            await _repo.UpdateAsync(model);
+            return (true, null);
+        }
+        catch (Exception ex)
+        {
+            return (false, ex.Message);
+        }
     }
 
     public async Task<bool> DeleteAsync(int id)
     {
-        await _repo.DeleteAsync(id);
-        var affected = await _repo.SaveChangesAsync();
-        return affected > 0;
+        try
+        {
+            await _repo.DeleteAsync(id);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 }

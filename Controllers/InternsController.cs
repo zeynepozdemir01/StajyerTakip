@@ -5,16 +5,20 @@ using System.Globalization;
 using System.Text;
 using ClosedXML.Excel;
 
-using StajyerTakip.Services;          
-using StajyerTakip.Domain.Entities;   
+using MediatR;
+using StajyerTakip.Domain.Entities;
+using StajyerTakip.Models.ViewModels;
+
+using StajyerTakip.Application.Interns.Queries;   
+using StajyerTakip.Application.Interns.Commands;  
 
 namespace StajyerTakip.Controllers
 {
     [Authorize]
     public class InternsController : Controller
     {
-        private readonly IInternService _svc;
-        public InternsController(IInternService svc) => _svc = svc;
+        private readonly IMediator _mediator;
+        public InternsController(IMediator mediator) => _mediator = mediator;
 
         public async Task<IActionResult> Index(
             string? q,
@@ -24,18 +28,19 @@ namespace StajyerTakip.Controllers
             string sortField = "LastName",
             string sortOrder = "asc")
         {
-            var result = await _svc.ListAsync(q, status, page, pageSize, sortField, sortOrder);
+            var res = await _mediator.Send(new GetInternsQuery(q, status, page, pageSize, sortField, sortOrder));
+            if (!res.Succeeded) return Problem(res.Error);
 
-            var vm = new Models.ViewModels.InternListVm
+            var vm = new InternListVm
             {
-                Items     = result.Items,
-                Page      = result.Page,
-                PageSize  = result.PageSize,
-                TotalCount= result.TotalCount,
-                Query     = q,
-                Status    = status,
-                SortField = sortField,
-                SortOrder = sortOrder
+                Items      = res.Value!.Items,
+                Page       = res.Value.Page,
+                PageSize   = res.Value.PageSize,
+                TotalCount = res.Value.TotalCount,
+                Query      = q,
+                Status     = status,
+                SortField  = sortField,
+                SortOrder  = sortOrder
             };
 
             return View(vm);
@@ -43,9 +48,10 @@ namespace StajyerTakip.Controllers
 
         public async Task<IActionResult> Details(int id)
         {
-            var m = await _svc.GetAsync(id);
-            if (m is null) return NotFound();
-            return View(m);
+            var res = await _mediator.Send(new GetInternByIdQuery(id));
+            if (!res.Succeeded) return NotFound(res.Error);
+            if (res.Value is null) return NotFound();
+            return View(res.Value);
         }
 
         public IActionResult Create() => View();
@@ -56,10 +62,10 @@ namespace StajyerTakip.Controllers
         {
             if (!ModelState.IsValid) return View(model);
 
-            var (ok, error) = await _svc.CreateAsync(model);
-            if (!ok)
+            var result = await _mediator.Send(new CreateInternCommand(model));
+            if (!result.Succeeded)
             {
-                ModelState.AddModelError(string.Empty, error ?? "Kayıt oluşturulamadı.");
+                ModelState.AddModelError("", result.Error ?? "Kayıt oluşturulamadı");
                 return View(model);
             }
             return RedirectToAction(nameof(Index));
@@ -67,9 +73,10 @@ namespace StajyerTakip.Controllers
 
         public async Task<IActionResult> Edit(int id)
         {
-            var m = await _svc.GetAsync(id);
-            if (m is null) return NotFound();
-            return View(m);
+            var res = await _mediator.Send(new GetInternByIdQuery(id));
+            if (!res.Succeeded) return NotFound(res.Error);
+            if (res.Value is null) return NotFound();
+            return View(res.Value);
         }
 
         [HttpPost]
@@ -79,10 +86,10 @@ namespace StajyerTakip.Controllers
             if (id != model.Id) return BadRequest();
             if (!ModelState.IsValid) return View(model);
 
-            var (ok, error) = await _svc.UpdateAsync(model);
-            if (!ok)
+            var res = await _mediator.Send(new UpdateInternCommand(model));
+            if (!res.Succeeded)
             {
-                ModelState.AddModelError(string.Empty, error ?? "Kayıt güncellenemedi.");
+                ModelState.AddModelError("", res.Error ?? "Kayıt güncellenemedi");
                 return View(model);
             }
             return RedirectToAction(nameof(Index));
@@ -91,9 +98,10 @@ namespace StajyerTakip.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
-            var m = await _svc.GetAsync(id);
-            if (m is null) return NotFound();
-            return View(m);
+            var res = await _mediator.Send(new GetInternByIdQuery(id));
+            if (!res.Succeeded) return NotFound(res.Error);
+            if (res.Value is null) return NotFound();
+            return View(res.Value);
         }
 
         [HttpPost, ActionName("Delete")]
@@ -101,8 +109,8 @@ namespace StajyerTakip.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var ok = await _svc.DeleteAsync(id);
-            if (!ok) return NotFound();
+            var res = await _mediator.Send(new DeleteInternCommand(id));
+            if (!res.Succeeded) return NotFound(res.Error);
             return RedirectToAction(nameof(Index));
         }
 
@@ -113,7 +121,8 @@ namespace StajyerTakip.Controllers
             string sortOrder = "asc")
         {
             const int Huge = 1_000_000;
-            var result = await _svc.ListAsync(q, status, 1, Huge, sortField, sortOrder);
+            var res = await _mediator.Send(new GetInternsQuery(q, status, 1, Huge, sortField, sortOrder));
+            if (!res.Succeeded) return Problem(res.Error);
 
             static string CsvEsc(string? s)
             {
@@ -124,7 +133,7 @@ namespace StajyerTakip.Controllers
             var sb = new StringBuilder();
             sb.AppendLine("Id,FirstName,LastName,NationalId,Email,Phone,School,Department,StartDate,EndDate,Status");
 
-            foreach (var i in result.Items)
+            foreach (var i in res.Value!.Items)
             {
                 var start = i.StartDate.ToString("yyyy-MM-dd");
                 var end   = i.EndDate.HasValue ? i.EndDate.Value.ToString("yyyy-MM-dd") : "";
@@ -156,7 +165,8 @@ namespace StajyerTakip.Controllers
             string sortOrder = "asc")
         {
             const int Huge = 1_000_000;
-            var result = await _svc.ListAsync(q, status, 1, Huge, sortField, sortOrder);
+            var res = await _mediator.Send(new GetInternsQuery(q, status, 1, Huge, sortField, sortOrder));
+            if (!res.Succeeded) return Problem(res.Error);
 
             using var wb = new XLWorkbook();
             var ws = wb.Worksheets.Add("Stajyerler");
@@ -170,7 +180,7 @@ namespace StajyerTakip.Controllers
                 ws.Cell(1, c + 1).Value = headers[c];
 
             int r = 2;
-            foreach (var i in result.Items)
+            foreach (var i in res.Value!.Items)
             {
                 ws.Cell(r, 1).Value = i.Id;
                 ws.Cell(r, 2).Value = i.FirstName;
@@ -230,7 +240,7 @@ namespace StajyerTakip.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UploadCsv(IFormFile? file)
         {
-            var result = new Models.ViewModels.ImportResultVm();
+            var result = new ImportResultVm();
 
             if (file is null || file.Length == 0)
             {
@@ -248,7 +258,7 @@ namespace StajyerTakip.Controllers
             using var stream = file.OpenReadStream();
             using var reader = new StreamReader(stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
 
-            if (!reader.EndOfStream) await reader.ReadLineAsync();
+            if (!reader.EndOfStream) await reader.ReadLineAsync(); // header
 
             string? line;
             int lineNo = 1;
@@ -314,11 +324,11 @@ namespace StajyerTakip.Controllers
                     continue;
                 }
 
-                var (ok, error) = await _svc.CreateAsync(model);
-                if (!ok)
+                var createRes = await _mediator.Send(new CreateInternCommand(model));
+                if (!createRes.Succeeded)
                 {
                     result.Skipped++;
-                    result.Errors.Add($"Satır {lineNo}: {error}");
+                    result.Errors.Add($"Satır {lineNo}: {createRes.Error}");
                 }
                 else
                 {
