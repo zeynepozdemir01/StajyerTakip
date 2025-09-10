@@ -8,6 +8,7 @@ using StajyerTakip.Application.Interfaces;
 using StajyerTakip.Infrastructure.Repositories;
 using StajyerTakip.Services;
 using StajyerTakip.Data;                        
+using StajyerTakip.Middlewares;                 
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,6 +39,8 @@ builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
+app.UseMiddleware<GlobalExceptionMiddleware>();
+
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -52,6 +55,7 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
 app.UseRouting();
 
 app.UseAuthentication();

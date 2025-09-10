@@ -1,20 +1,40 @@
-namespace StajyerTakip.Application.Common;
-
-public class Result
+namespace StajyerTakip.Application.Common
 {
-    public bool Succeeded { get; init; }
-    public string? Error { get; init; }
+    // Değer döndürmeyen sonuçlar için
+    public sealed class Result
+    {
+        public bool Succeeded { get; }
+        public string? Error { get; }
 
-    public static Result Success() => new() { Succeeded = true };
-    public static Result Failure(string? error) => new() { Succeeded = false, Error = error };
-}
+        private Result(bool succeeded, string? error)
+        {
+            Succeeded = succeeded;
+            Error = error;
+        }
 
-public class Result<T>
-{
-    public bool Succeeded { get; init; }
-    public string? Error { get; init; }
-    public T? Value { get; init; }
+        public static Result Ok() => new Result(true, null);
 
-    public static Result<T> Success(T value) => new() { Succeeded = true, Value = value };
-    public static Result<T> Failure(string? error) => new() { Succeeded = false, Error = error };
+        public static Result Fail(string? error) =>
+            new Result(false, string.IsNullOrWhiteSpace(error) ? "Bir hata oluştu." : error);
+    }
+
+    // Değer döndüren sonuçlar için
+    public sealed class Result<T>
+    {
+        public bool Succeeded { get; }
+        public string? Error { get; }
+        public T? Value { get; }
+
+        private Result(bool succeeded, T? value, string? error)
+        {
+            Succeeded = succeeded;
+            Value = value;
+            Error = error;
+        }
+
+        public static Result<T> Ok(T value) => new Result<T>(true, value, null);
+
+        public static Result<T> Fail(string? error) =>
+            new Result<T>(false, default, string.IsNullOrWhiteSpace(error) ? "Bir hata oluştu." : error);
+    }
 }
