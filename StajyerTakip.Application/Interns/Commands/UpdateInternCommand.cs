@@ -19,7 +19,7 @@ public sealed class UpdateInternCommandHandler
         if (entity is null)
             return Result.Fail("Kayıt bulunamadı.");
 
-        // İlgili alanları güncelle
+
         entity.FirstName  = request.Model.FirstName;
         entity.LastName   = request.Model.LastName;
         entity.Email      = request.Model.Email;

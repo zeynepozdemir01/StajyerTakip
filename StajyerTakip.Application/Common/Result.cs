@@ -1,6 +1,5 @@
 namespace StajyerTakip.Application.Common
 {
-    // Değer döndürmeyen sonuçlar için
     public sealed class Result
     {
         public bool Succeeded { get; }
@@ -18,7 +17,6 @@ namespace StajyerTakip.Application.Common
             new Result(false, string.IsNullOrWhiteSpace(error) ? "Bir hata oluştu." : error);
     }
 
-    // Değer döndüren sonuçlar için
     public sealed class Result<T>
     {
         public bool Succeeded { get; }
