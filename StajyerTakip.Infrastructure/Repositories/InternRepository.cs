@@ -19,13 +19,13 @@ public sealed class InternRepository : IInternRepository
         {
             var term = q.Trim().ToLower();
             query = query.Where(i =>
-                i.FirstName!.ToLower().Contains(term) ||
-                i.LastName!.ToLower().Contains(term)  ||
-                (i.Email ?? "").ToLower().Contains(term) ||
-                (i.Phone ?? "").ToLower().Contains(term) ||
-                (i.School ?? "").ToLower().Contains(term) ||
+                (i.FirstName  ?? "").ToLower().Contains(term) ||
+                (i.LastName   ?? "").ToLower().Contains(term) ||
+                (i.Email      ?? "").ToLower().Contains(term) ||
+                (i.Phone      ?? "").ToLower().Contains(term) ||
+                (i.School     ?? "").ToLower().Contains(term) ||
                 (i.Department ?? "").ToLower().Contains(term) ||
-                i.NationalId.Contains(term)
+                (i.NationalId ?? "").ToLower().Contains(term)
             );
         }
 
@@ -41,8 +41,9 @@ public sealed class InternRepository : IInternRepository
             "school"     => asc ? query.OrderBy(i => i.School)     : query.OrderByDescending(i => i.School),
             "department" => asc ? query.OrderBy(i => i.Department) : query.OrderByDescending(i => i.Department),
             "status"     => asc ? query.OrderBy(i => i.Status)     : query.OrderByDescending(i => i.Status),
-            _            => asc ? query.OrderBy(i => i.LastName).ThenBy(i => i.FirstName)
-                                : query.OrderByDescending(i => i.LastName).ThenByDescending(i => i.FirstName)
+            _            => asc
+                ? query.OrderBy(i => i.LastName).ThenBy(i => i.FirstName)
+                : query.OrderByDescending(i => i.LastName).ThenByDescending(i => i.FirstName)
         };
 
         var total = await query.CountAsync();
@@ -55,19 +56,33 @@ public sealed class InternRepository : IInternRepository
         return (items, total);
     }
 
-    public Task<Intern?> GetByIdAsync(int id)
+    public Task<Intern?> FindByIdAsync(int id)
         => _db.Interns.FirstOrDefaultAsync(i => i.Id == id)!;
 
-    public async Task AddAsync(Intern entity)
-        => await _db.Interns.AddAsync(entity);
+    public Task<Intern?> GetByIdAsync(int id)
+        => FindByIdAsync(id);
 
-    public void Update(Intern entity)
-        => _db.Interns.Update(entity);
+    public async Task<int> AddAsync(Intern entity)
+    {
+        await _db.Interns.AddAsync(entity);
+        await _db.SaveChangesAsync();
+        return entity.Id;
+    }
+
+    public async Task UpdateAsync(Intern entity)
+    {
+        _db.Interns.Update(entity);
+        await _db.SaveChangesAsync();
+    }
 
     public async Task DeleteAsync(int id)
     {
         var e = await _db.Interns.FindAsync(id);
-        if (e != null) _db.Interns.Remove(e);
+        if (e is not null)
+        {
+            _db.Interns.Remove(e);
+            await _db.SaveChangesAsync();
+        }
     }
 
     public Task<int> SaveChangesAsync() => _db.SaveChangesAsync();

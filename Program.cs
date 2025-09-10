@@ -1,11 +1,13 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.Cookies;
 
-using StajyerTakip.Infrastructure.Data;     
+using MediatR;
+using StajyerTakip.Application;                 
+using StajyerTakip.Infrastructure.Data;
 using StajyerTakip.Application.Interfaces;
 using StajyerTakip.Infrastructure.Repositories;
 using StajyerTakip.Services;
-using StajyerTakip.Data;                    
+using StajyerTakip.Data;                        
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +18,11 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddScoped<IInternRepository, InternRepository>();
 builder.Services.AddScoped<IInternService, InternService>();
+
+builder.Services.AddMediatR(cfg =>
+{
+    cfg.RegisterServicesFromAssembly(typeof(ApplicationAssemblyMarker).Assembly);
+});
 
 builder.Services
     .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -34,8 +41,8 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await db.Database.MigrateAsync();   
-    await DbSeeder.SeedAsync(db);       
+    await db.Database.MigrateAsync();
+    await DbSeeder.SeedAsync(db);
 }
 
 if (!app.Environment.IsDevelopment())
@@ -45,7 +52,6 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseRouting();
 
 app.UseAuthentication();

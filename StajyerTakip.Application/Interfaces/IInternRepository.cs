@@ -12,10 +12,11 @@ public interface IInternRepository
         string sortField,
         string sortOrder);
 
+    Task<Intern?> FindByIdAsync(int id);
     Task<Intern?> GetByIdAsync(int id);
 
-    Task AddAsync(Intern entity);
-    void  Update(Intern entity);
+    Task<int> AddAsync(Intern entity);
+    Task UpdateAsync(Intern entity);
     Task DeleteAsync(int id);
 
     Task<int> SaveChangesAsync();
