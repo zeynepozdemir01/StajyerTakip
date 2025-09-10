@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("StajyerTakip.Infrastructure")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ad062c57bfb8efa7fb67a3802a0035eda3713544")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+902cebe4c36ab06a0882a626427457378db8a590")]
 [assembly: System.Reflection.AssemblyProductAttribute("StajyerTakip.Infrastructure")]
 [assembly: System.Reflection.AssemblyTitleAttribute("StajyerTakip.Infrastructure")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

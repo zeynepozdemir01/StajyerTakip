@@ -15,14 +15,9 @@ public sealed class GetInternByIdQueryHandler
 
     public async Task<Result<Intern?>> Handle(GetInternByIdQuery request, CancellationToken ct)
     {
-        try
-        {
-            var entity = await _repo.FindByIdAsync(request.Id);
-            return Result<Intern?>.Success(entity);
-        }
-        catch (Exception ex)
-        {
-            return Result<Intern?>.Failure(ex.Message);
-        }
+        var entity = await _repo.FindByIdAsync(request.Id);
+        return entity is null
+            ? Result<Intern?>.Fail("Kayıt bulunamadı.")
+            : Result<Intern?>.Ok(entity);
     }
 }

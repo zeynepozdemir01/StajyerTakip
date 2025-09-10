@@ -9,8 +9,8 @@ using MediatR;
 using StajyerTakip.Domain.Entities;
 using StajyerTakip.Models.ViewModels;
 
-using StajyerTakip.Application.Interns.Queries;   
-using StajyerTakip.Application.Interns.Commands;  
+using StajyerTakip.Application.Interns.Queries;
+using StajyerTakip.Application.Interns.Commands;
 
 namespace StajyerTakip.Controllers
 {
@@ -20,6 +20,7 @@ namespace StajyerTakip.Controllers
         private readonly IMediator _mediator;
         public InternsController(IMediator mediator) => _mediator = mediator;
 
+        [HttpGet]
         public async Task<IActionResult> Index(
             string? q,
             string? status,
@@ -46,6 +47,7 @@ namespace StajyerTakip.Controllers
             return View(vm);
         }
 
+        [HttpGet]
         public async Task<IActionResult> Details(int id)
         {
             var res = await _mediator.Send(new GetInternByIdQuery(id));
@@ -54,6 +56,7 @@ namespace StajyerTakip.Controllers
             return View(res.Value);
         }
 
+        [HttpGet]
         public IActionResult Create() => View();
 
         [HttpPost]
@@ -71,6 +74,7 @@ namespace StajyerTakip.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
             var res = await _mediator.Send(new GetInternByIdQuery(id));
@@ -95,6 +99,7 @@ namespace StajyerTakip.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        [HttpGet]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
@@ -195,15 +200,15 @@ namespace StajyerTakip.Controllers
 
                 if (i.EndDate.HasValue)
                 {
-                    ws.Cell(r,10).Value = i.EndDate.Value.ToDateTime(TimeOnly.MinValue);
-                    ws.Cell(r,10).Style.DateFormat.Format = "yyyy-mm-dd";
+                    ws.Cell(r, 10).Value = i.EndDate.Value.ToDateTime(TimeOnly.MinValue);
+                    ws.Cell(r, 10).Style.DateFormat.Format = "yyyy-mm-dd";
                 }
                 else
                 {
-                    ws.Cell(r,10).Value = "";
+                    ws.Cell(r, 10).Value = "";
                 }
 
-                ws.Cell(r,11).Value = i.Status;
+                ws.Cell(r, 11).Value = i.Status;
                 r++;
             }
 
@@ -224,6 +229,7 @@ namespace StajyerTakip.Controllers
                 fileName);
         }
 
+        [HttpGet]
         [Authorize(Roles = "Admin")]
         public IActionResult DownloadCsvTemplate()
         {
@@ -232,6 +238,7 @@ namespace StajyerTakip.Controllers
             return File(bytes, "text/csv; charset=utf-8", "stajyer_sablon.csv");
         }
 
+        [HttpGet]
         [Authorize(Roles = "Admin")]
         public IActionResult UploadCsv() => View();
 
@@ -258,7 +265,8 @@ namespace StajyerTakip.Controllers
             using var stream = file.OpenReadStream();
             using var reader = new StreamReader(stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
 
-            if (!reader.EndOfStream) await reader.ReadLineAsync(); // header
+            // header
+            if (!reader.EndOfStream) await reader.ReadLineAsync();
 
             string? line;
             int lineNo = 1;
@@ -316,7 +324,7 @@ namespace StajyerTakip.Controllers
 
                 var ctx = new ValidationContext(model);
                 var validationResults = new List<ValidationResult>();
-                if (!Validator.TryValidateObject(model, ctx, validationResults, true))
+                if (!Validator.TryValidateObject(model, ctx, validationResults, validateAllProperties: true))
                 {
                     result.Skipped++;
                     var msgs = string.Join("; ", validationResults.Select(v => v.ErrorMessage));
@@ -338,6 +346,7 @@ namespace StajyerTakip.Controllers
 
             return View(result);
 
+            // ---- helpers ----
             static string? EmptyToNull(string? s) => string.IsNullOrWhiteSpace(s) ? null : s;
 
             static bool TryParseDateOnly(string? s, out DateOnly value)

@@ -11,19 +11,27 @@ public sealed class UpdateInternCommandHandler
     : IRequestHandler<UpdateInternCommand, Result>
 {
     private readonly IInternRepository _repo;
-
     public UpdateInternCommandHandler(IInternRepository repo) => _repo = repo;
 
     public async Task<Result> Handle(UpdateInternCommand request, CancellationToken ct)
     {
-        try
-        {
-            await _repo.UpdateAsync(request.Model);
-            return Result.Success();
-        }
-        catch (Exception ex)
-        {
-            return Result.Failure(ex.Message);
-        }
+        var entity = await _repo.FindByIdAsync(request.Model.Id);
+        if (entity is null)
+            return Result.Fail("Kayıt bulunamadı.");
+
+
+        entity.FirstName  = request.Model.FirstName;
+        entity.LastName   = request.Model.LastName;
+        entity.Email      = request.Model.Email;
+        entity.Phone      = request.Model.Phone;
+        entity.School     = request.Model.School;
+        entity.Department = request.Model.Department;
+        entity.NationalId = request.Model.NationalId;
+        entity.StartDate  = request.Model.StartDate;
+        entity.EndDate    = request.Model.EndDate;
+        entity.Status     = request.Model.Status;
+
+        await _repo.UpdateAsync(entity);
+        return Result.Ok();
     }
 }

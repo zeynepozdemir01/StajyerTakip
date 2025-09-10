@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StajyerTakip.Application", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StajyerTakip.Infrastructure", "StajyerTakip.Infrastructure\StajyerTakip.Infrastructure.csproj", "{E99F6C5C-DE3E-43CC-8B59-8D9D82DCAFF0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "StajyerTakip.Api", "StajyerTakip.Api\StajyerTakip.Api.csproj", "{BF972A00-34E4-4D8C-A341-6A4FC2E4EBFB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -69,6 +71,18 @@ Global
 		{E99F6C5C-DE3E-43CC-8B59-8D9D82DCAFF0}.Release|x64.Build.0 = Release|Any CPU
 		{E99F6C5C-DE3E-43CC-8B59-8D9D82DCAFF0}.Release|x86.ActiveCfg = Release|Any CPU
 		{E99F6C5C-DE3E-43CC-8B59-8D9D82DCAFF0}.Release|x86.Build.0 = Release|Any CPU
+		{BF972A00-34E4-4D8C-A341-6A4FC2E4EBFB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BF972A00-34E4-4D8C-A341-6A4FC2E4EBFB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BF972A00-34E4-4D8C-A341-6A4FC2E4EBFB}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{BF972A00-34E4-4D8C-A341-6A4FC2E4EBFB}.Debug|x64.Build.0 = Debug|Any CPU
+		{BF972A00-34E4-4D8C-A341-6A4FC2E4EBFB}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{BF972A00-34E4-4D8C-A341-6A4FC2E4EBFB}.Debug|x86.Build.0 = Debug|Any CPU
+		{BF972A00-34E4-4D8C-A341-6A4FC2E4EBFB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BF972A00-34E4-4D8C-A341-6A4FC2E4EBFB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BF972A00-34E4-4D8C-A341-6A4FC2E4EBFB}.Release|x64.ActiveCfg = Release|Any CPU
+		{BF972A00-34E4-4D8C-A341-6A4FC2E4EBFB}.Release|x64.Build.0 = Release|Any CPU
+		{BF972A00-34E4-4D8C-A341-6A4FC2E4EBFB}.Release|x86.ActiveCfg = Release|Any CPU
+		{BF972A00-34E4-4D8C-A341-6A4FC2E4EBFB}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
