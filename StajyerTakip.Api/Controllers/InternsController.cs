@@ -3,8 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 
 using StajyerTakip.Application.Interns.Queries;
 using StajyerTakip.Application.Interns.Commands;
-using StajyerTakip.Domain.Entities;
 using StajyerTakip.Api.Contracts.Interns;
+using StajyerTakip.Domain.Entities;
 
 namespace StajyerTakip.Api.Controllers;
 
@@ -16,7 +16,7 @@ public class InternsController : ControllerBase
     public InternsController(IMediator mediator) => _mediator = mediator;
 
     [HttpGet]
-    public async Task<ActionResult<PaginatedInternListDto>> Get(
+    public async Task<ActionResult<PaginatedInternListDto>> List(
         [FromQuery] string? q,
         [FromQuery] string? status,
         [FromQuery] int page = 1,
@@ -25,11 +25,14 @@ public class InternsController : ControllerBase
         [FromQuery] string sortOrder = "asc")
     {
         var res = await _mediator.Send(new GetInternsQuery(q, status, page, pageSize, sortField, sortOrder));
-        if (!res.Succeeded || res.Value is null)
-            return Problem(res.Error ?? "Kayıtlar getirilemedi.", statusCode: 400);
+        if (!res.Succeeded || res.Value is null) return Problem(res.Error, statusCode: 400);
+
+        var items = res.Value.Items
+            .Select(i => new InternDto(i.Id, i.FirstName, i.LastName, i.Email, i.Phone))
+            .ToList();
 
         var dto = new PaginatedInternListDto(
-            Items: res.Value.Items.Select(MapToDto).ToList(),
+            Items: items,
             Page: res.Value.Page,
             PageSize: res.Value.PageSize,
             TotalCount: res.Value.TotalCount
@@ -42,16 +45,13 @@ public class InternsController : ControllerBase
     public async Task<ActionResult<InternDto>> GetById(int id)
     {
         var res = await _mediator.Send(new GetInternByIdQuery(id));
-        if (!res.Succeeded) return NotFound(res.Error);
-        if (res.Value is null) return NotFound();
+        if (!res.Succeeded || res.Value is null) return NotFound(res.Error);
 
-        return Ok(MapToDto(res.Value));
+        var e = res.Value;
+        return Ok(new InternDto(e.Id, e.FirstName, e.LastName, e.Email, e.Phone));
     }
 
-    
     [HttpPost]
-    [ProducesResponseType(typeof(InternDto), StatusCodes.Status201Created)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<InternDto>> Create([FromBody] CreateInternRequest req)
     {
         var entity = new Intern
@@ -63,62 +63,47 @@ public class InternsController : ControllerBase
             Phone      = req.Phone,
             School     = req.School,
             Department = req.Department,
+            Status     = string.IsNullOrWhiteSpace(req.Status) ? "Aktif" : req.Status!,
             StartDate  = req.StartDate ?? DateOnly.FromDateTime(DateTime.UtcNow),
-            EndDate    = req.EndDate,
-            Status     = string.IsNullOrWhiteSpace(req.Status) ? "Aktif" : req.Status
+            EndDate    = req.EndDate
         };
 
-        var res = await _mediator.Send(new CreateInternCommand(entity));
-        if (!res.Succeeded) return Problem(res.Error, statusCode: 400);
+        var createRes = await _mediator.Send(new CreateInternCommand(entity));
+        if (!createRes.Succeeded) return Problem(createRes.Error, statusCode: 400);
 
-        var dto = new InternDto(res.Value, entity.FirstName, entity.LastName, entity.Email, entity.Phone);
-        return CreatedAtAction(nameof(GetById), new { id = dto.Id }, dto);   
+        var dto = new InternDto(createRes.Value, entity.FirstName, entity.LastName, entity.Email, entity.Phone);
+        return CreatedAtAction(nameof(GetById), new { id = dto.Id }, dto);
     }
-
 
     [HttpPut("{id:int}")]
-    public async Task<ActionResult<InternDto>> Update(int id, [FromBody] UpdateInternRequest req)
+    public async Task<ActionResult> Update(int id, [FromBody] UpdateInternRequest req)
     {
-        if (!ModelState.IsValid) return ValidationProblem(ModelState);
-        if (id != req.Id) return BadRequest("Rota Id ile gövde Id uyuşmuyor.");
+        var entity = new Intern
+        {
+            Id         = id,
+            FirstName  = req.FirstName,
+            LastName   = req.LastName,
+            NationalId = req.NationalId,
+            Email      = req.Email,
+            Phone      = req.Phone,
+            School     = req.School,
+            Department = req.Department,
+            Status     = string.IsNullOrWhiteSpace(req.Status) ? "Aktif" : req.Status!,
+            StartDate  = req.StartDate,
+            EndDate    = req.EndDate
+        };
 
-        var existing = await _mediator.Send(new GetInternByIdQuery(id));
-        if (!existing.Succeeded) return NotFound(existing.Error);
-        if (existing.Value is null) return NotFound();
-
-        var e = existing.Value;
-        e.FirstName  = req.FirstName;
-        e.LastName   = req.LastName;
-        e.NationalId = req.NationalId;
-        e.Email      = req.Email;
-        e.Phone      = req.Phone;
-        e.School     = req.School;
-        e.Department = req.Department;
-        e.Status     = req.Status;
-        e.StartDate  = req.StartDate;
-        e.EndDate    = req.EndDate;
-
-        var res = await _mediator.Send(new UpdateInternCommand(e));
-        if (!res.Succeeded)
-            return Problem(res.Error ?? "Kayıt güncellenemedi.", statusCode: 400);
-
-        return Ok(MapToDto(e));
-    }
-
-    [HttpDelete("{id:int}")]
-    public async Task<IActionResult> Delete(int id)
-    {
-        var existing = await _mediator.Send(new GetInternByIdQuery(id));
-        if (!existing.Succeeded) return NotFound(existing.Error);
-        if (existing.Value is null) return NotFound();
-
-        var res = await _mediator.Send(new DeleteInternCommand(id));
-        if (!res.Succeeded)
-            return Problem(res.Error ?? "Kayıt silinemedi.", statusCode: 400);
+        var updRes = await _mediator.Send(new UpdateInternCommand(entity));
+        if (!updRes.Succeeded) return Problem(updRes.Error, statusCode: 400);
 
         return NoContent();
     }
 
-    private static InternDto MapToDto(Intern e) =>
-        new(e.Id, e.FirstName, e.LastName, e.Email, e.Phone);
+    [HttpDelete("{id:int}")]
+    public async Task<ActionResult> Delete(int id)
+    {
+        var delRes = await _mediator.Send(new DeleteInternCommand(id));
+        if (!delRes.Succeeded) return Problem(delRes.Error, statusCode: 400);
+        return NoContent();
+    }
 }

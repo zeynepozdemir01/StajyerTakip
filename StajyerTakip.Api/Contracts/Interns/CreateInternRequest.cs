@@ -1,6 +1,6 @@
 namespace StajyerTakip.Api.Contracts.Interns;
 
-public record CreateInternRequest(
+public sealed record CreateInternRequest(
     string FirstName,
     string LastName,
     string NationalId,

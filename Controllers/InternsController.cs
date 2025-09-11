@@ -346,7 +346,6 @@ namespace StajyerTakip.Controllers
 
             return View(result);
 
-            // ---- helpers ----
             static string? EmptyToNull(string? s) => string.IsNullOrWhiteSpace(s) ? null : s;
 
             static bool TryParseDateOnly(string? s, out DateOnly value)
