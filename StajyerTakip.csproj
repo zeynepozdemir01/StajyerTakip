@@ -26,16 +26,22 @@
     <Compile Remove="StajyerTakip.Domain\**\*.cs" />
     <Compile Remove="StajyerTakip.Application\**\*.cs" />
     <Compile Remove="StajyerTakip.Infrastructure\**\*.cs" />
-    <Compile Remove="**\obj\**\*.cs" />
-    <Compile Remove="**\bin\**\*.cs" />
+    <Compile Remove="StajyerTakip.Api\**\*.cs" />
+
     <None   Remove="StajyerTakip.Domain\**\*" />
     <None   Remove="StajyerTakip.Application\**\*" />
     <None   Remove="StajyerTakip.Infrastructure\**\*" />
-    <None   Remove="**\obj\**\*" />
-    <None   Remove="**\bin\**\*" />
+    <None   Remove="StajyerTakip.Api\**\*" />
+
     <Content Remove="StajyerTakip.Domain\**\*" />
     <Content Remove="StajyerTakip.Application\**\*" />
     <Content Remove="StajyerTakip.Infrastructure\**\*" />
+    <Content Remove="StajyerTakip.Api\**\*" />
+
+    <Compile Remove="**\obj\**\*.cs" />
+    <Compile Remove="**\bin\**\*.cs" />
+    <None   Remove="**\obj\**\*" />
+    <None   Remove="**\bin\**\*" />
     <Content Remove="**\obj\**\*" />
     <Content Remove="**\bin\**\*" />
   </ItemGroup>

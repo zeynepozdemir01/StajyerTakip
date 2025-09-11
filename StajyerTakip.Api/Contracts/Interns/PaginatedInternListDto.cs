@@ -1,7 +1,7 @@
 namespace StajyerTakip.Api.Contracts.Interns;
 
-public record PaginatedInternListDto(
-    List<InternDto> Items,
+public sealed record PaginatedInternListDto(
+    IReadOnlyList<InternDto> Items,
     int Page,
     int PageSize,
     int TotalCount

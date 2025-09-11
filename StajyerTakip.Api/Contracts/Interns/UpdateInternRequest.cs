@@ -1,7 +1,6 @@
 namespace StajyerTakip.Api.Contracts.Interns;
 
-public record UpdateInternRequest(
-    int Id,
+public sealed record UpdateInternRequest(
     string FirstName,
     string LastName,
     string NationalId,

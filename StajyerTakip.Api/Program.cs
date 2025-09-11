@@ -2,8 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using MediatR;
 
-using StajyerTakip.Application;            
-using StajyerTakip.Infrastructure.Data;    
+using StajyerTakip.Application;
+using StajyerTakip.Infrastructure.Data;
 using StajyerTakip.Infrastructure.Repositories;
 using StajyerTakip.Application.Interfaces;
 
@@ -21,8 +21,6 @@ builder.Services.AddScoped<IInternRepository, InternRepository>();
 
 builder.Services.AddControllers();
 
-builder.Services.AddProblemDetails();
-
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -37,7 +35,6 @@ builder.Services.AddSwaggerGen(c =>
         BearerFormat = "JWT",
         Description = "Bearer {token}"
     });
-
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
@@ -52,8 +49,6 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 var app = builder.Build();
-
-app.UseExceptionHandler();
 
 if (app.Environment.IsDevelopment())
 {
