@@ -1,15 +1,18 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
+
 using StajyerTakip.Application.Interns.Queries;
 using StajyerTakip.Application.Interns.Commands;
 using StajyerTakip.Api.Contracts.Interns;
 using StajyerTakip.Domain.Entities;
+using Microsoft.AspNetCore.Authorization;
 
 namespace StajyerTakip.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class InternsController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -99,6 +102,7 @@ public class InternsController : ControllerBase
         return NoContent();
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpDelete("{id:int}")]
     public async Task<ActionResult> Delete(int id)
     {

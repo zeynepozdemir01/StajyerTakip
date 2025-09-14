@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("StajyerTakip.Application")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9377691a012d9c6c2348ba3e839e80f40474f338")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+61bd4b0d9f8ddfd022bf8546de564b11a8a3173b")]
 [assembly: System.Reflection.AssemblyProductAttribute("StajyerTakip.Application")]
 [assembly: System.Reflection.AssemblyTitleAttribute("StajyerTakip.Application")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
