@@ -1,12 +1,12 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
-
 using StajyerTakip.Application.Interns.Queries;
 using StajyerTakip.Application.Interns.Commands;
 using StajyerTakip.Api.Contracts.Interns;
 using StajyerTakip.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
+using StajyerTakip.Application.Interns.Queries.GetInterns;
 
 namespace StajyerTakip.Api.Controllers;
 
@@ -27,18 +27,38 @@ public class InternsController : ControllerBase
         [FromQuery] string sortField = "LastName",
         [FromQuery] string sortOrder = "asc")
     {
-        var res = await _mediator.Send(new GetInternsQuery(q, status, page, pageSize, sortField, sortOrder));
-        if (!res.Succeeded || res.Value is null) return Problem(res.Error, statusCode: 400);
+        var res = await _mediator.Send(new GetInternsQuery
+        {
+            Search   = q,
+            Status   = status,
+            Page     = page,
+            PageSize = pageSize,
+            SortBy   = sortField,
+            SortDir  = sortOrder
+        });
 
-        var items = res.Value.Items
-            .Select(i => new InternDto(i.Id, i.FirstName, i.LastName, i.Email, i.Phone))
-            .ToList();
+        if (!res.Succeeded || res.Value is null)
+            return Problem(res.Error, statusCode: 400);
+
+        var items = res.Value.Items.Select(i => new InternDto(
+            Id:             i.Id,
+            FirstName:      i.FirstName,
+            LastName:       i.LastName,
+            IdentityNumber: i.IdentityNumber,
+            Email:          i.Email,
+            Phone:          i.Phone ?? "",
+            School:         i.School ?? "",
+            Department:     i.Department ?? "",
+            StartDate:      i.StartDate,
+            EndDate:        i.EndDate,
+            Status:         i.Status
+        )).ToList();
 
         var dto = new PaginatedInternListDto(
             Items: items,
             Page: res.Value.Page,
             PageSize: res.Value.PageSize,
-            TotalCount: res.Value.TotalCount
+            TotalCount: res.Value.Total
         );
 
         return Ok(dto);
@@ -51,7 +71,21 @@ public class InternsController : ControllerBase
         if (!res.Succeeded || res.Value is null) return NotFound(res.Error);
 
         var e = res.Value;
-        return Ok(new InternDto(e.Id, e.FirstName, e.LastName, e.Email, e.Phone));
+        var dto = new InternDto(
+            Id:             e.Id,
+            FirstName:      e.FirstName,
+            LastName:       e.LastName,
+            IdentityNumber: e.NationalId,
+            Email:          e.Email,
+            Phone:          e.Phone ?? "",
+            School:         e.School ?? "",
+            Department:     e.Department ?? "",
+            StartDate:      e.StartDate.ToDateTime(TimeOnly.MinValue),
+            EndDate:        e.EndDate.HasValue ? e.EndDate.Value.ToDateTime(TimeOnly.MinValue) : (DateTime?)null,
+            Status:         e.Status
+        );
+
+        return Ok(dto);
     }
 
     [HttpPost]
@@ -74,7 +108,20 @@ public class InternsController : ControllerBase
         var createRes = await _mediator.Send(new CreateInternCommand(entity));
         if (!createRes.Succeeded) return Problem(createRes.Error, statusCode: 400);
 
-        var dto = new InternDto(createRes.Value, entity.FirstName, entity.LastName, entity.Email, entity.Phone);
+        var dto = new InternDto(
+            Id:             createRes.Value,
+            FirstName:      entity.FirstName,
+            LastName:       entity.LastName,
+            IdentityNumber: entity.NationalId,
+            Email:          entity.Email,
+            Phone:          entity.Phone ?? "",
+            School:         entity.School ?? "",
+            Department:     entity.Department ?? "",
+            StartDate:      entity.StartDate.ToDateTime(TimeOnly.MinValue),
+            EndDate:        entity.EndDate.HasValue ? entity.EndDate.Value.ToDateTime(TimeOnly.MinValue) : (DateTime?)null,
+            Status:         entity.Status
+        );
+
         return CreatedAtAction(nameof(GetById), new { id = dto.Id }, dto);
     }
 

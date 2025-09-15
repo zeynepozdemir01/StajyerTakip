@@ -1,6 +1,6 @@
-namespace StajyerTakip.Api.Contracts.Interns;
+namespace StajyerTakip.Application.Interns.Queries.GetInterns;
 
-public sealed record InternDto(
+public sealed record InternListItemDto(
     int Id,
     string FirstName,
     string LastName,
