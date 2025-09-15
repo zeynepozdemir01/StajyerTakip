@@ -11,6 +11,7 @@ using StajyerTakip.Models.ViewModels;
 
 using StajyerTakip.Application.Interns.Queries;
 using StajyerTakip.Application.Interns.Commands;
+using StajyerTakip.Application.Interns.Queries.GetInterns;
 
 namespace StajyerTakip.Controllers
 {
@@ -29,7 +30,16 @@ namespace StajyerTakip.Controllers
             string sortField = "LastName",
             string sortOrder = "asc")
         {
-            var res = await _mediator.Send(new GetInternsQuery(q, status, page, pageSize, sortField, sortOrder));
+            var res = await _mediator.Send(new GetInternsQuery
+            {
+                Search  = q,
+                Status  = status,
+                Page    = page,
+                PageSize= pageSize,
+                SortBy  = sortField,
+                SortDir = sortOrder
+            });
+
             if (!res.Succeeded) return Problem(res.Error);
 
             var vm = new InternListVm
@@ -37,7 +47,7 @@ namespace StajyerTakip.Controllers
                 Items      = res.Value!.Items,
                 Page       = res.Value.Page,
                 PageSize   = res.Value.PageSize,
-                TotalCount = res.Value.TotalCount,
+                TotalCount = res.Value.Total,          
                 Query      = q,
                 Status     = status,
                 SortField  = sortField,
@@ -126,7 +136,17 @@ namespace StajyerTakip.Controllers
             string sortOrder = "asc")
         {
             const int Huge = 1_000_000;
-            var res = await _mediator.Send(new GetInternsQuery(q, status, 1, Huge, sortField, sortOrder));
+
+            var res = await _mediator.Send(new GetInternsQuery
+            {
+                Search = q,
+                Status = status,
+                Page = 1,
+                PageSize = Huge,
+                SortBy = sortField,
+                SortDir = sortOrder
+            });
+
             if (!res.Succeeded) return Problem(res.Error);
 
             static string CsvEsc(string? s)
@@ -140,14 +160,14 @@ namespace StajyerTakip.Controllers
 
             foreach (var i in res.Value!.Items)
             {
-                var start = i.StartDate.ToString("yyyy-MM-dd");
-                var end   = i.EndDate.HasValue ? i.EndDate.Value.ToString("yyyy-MM-dd") : "";
+                var start = i.StartDate?.ToString("yyyy-MM-dd") ?? "";
+                var end   = i.EndDate?.ToString("yyyy-MM-dd") ?? "";
 
                 sb.AppendLine(string.Join(",",
                     i.Id,
                     CsvEsc(i.FirstName),
                     CsvEsc(i.LastName),
-                    CsvEsc(i.NationalId),
+                    CsvEsc(i.IdentityNumber), 
                     CsvEsc(i.Email),
                     CsvEsc(i.Phone),
                     CsvEsc(i.School),
@@ -170,7 +190,17 @@ namespace StajyerTakip.Controllers
             string sortOrder = "asc")
         {
             const int Huge = 1_000_000;
-            var res = await _mediator.Send(new GetInternsQuery(q, status, 1, Huge, sortField, sortOrder));
+
+            var res = await _mediator.Send(new GetInternsQuery
+            {
+                Search = q,
+                Status = status,
+                Page = 1,
+                PageSize = Huge,
+                SortBy = sortField,
+                SortDir = sortOrder
+            });
+
             if (!res.Succeeded) return Problem(res.Error);
 
             using var wb = new XLWorkbook();
@@ -188,19 +218,27 @@ namespace StajyerTakip.Controllers
             foreach (var i in res.Value!.Items)
             {
                 ws.Cell(r, 1).Value = i.Id;
-                ws.Cell(r, 2).Value = i.FirstName;
-                ws.Cell(r, 3).Value = i.LastName;
-                ws.Cell(r, 4).Value = i.NationalId;
-                ws.Cell(r, 5).Value = i.Email;
+                ws.Cell(r, 2).Value = i.FirstName ?? "";
+                ws.Cell(r, 3).Value = i.LastName ?? "";
+                ws.Cell(r, 4).Value = i.IdentityNumber ?? "";  
+                ws.Cell(r, 5).Value = i.Email ?? "";
                 ws.Cell(r, 6).Value = i.Phone ?? "";
                 ws.Cell(r, 7).Value = i.School ?? "";
                 ws.Cell(r, 8).Value = i.Department ?? "";
-                ws.Cell(r, 9).Value = i.StartDate.ToDateTime(TimeOnly.MinValue);
-                ws.Cell(r, 9).Style.DateFormat.Format = "yyyy-mm-dd";
+
+                if (i.StartDate.HasValue)
+                {
+                    ws.Cell(r, 9).Value = i.StartDate.Value;
+                    ws.Cell(r, 9).Style.DateFormat.Format = "yyyy-mm-dd";
+                }
+                else
+                {
+                    ws.Cell(r, 9).Value = "";
+                }
 
                 if (i.EndDate.HasValue)
                 {
-                    ws.Cell(r, 10).Value = i.EndDate.Value.ToDateTime(TimeOnly.MinValue);
+                    ws.Cell(r, 10).Value = i.EndDate.Value;
                     ws.Cell(r, 10).Style.DateFormat.Format = "yyyy-mm-dd";
                 }
                 else
@@ -208,7 +246,7 @@ namespace StajyerTakip.Controllers
                     ws.Cell(r, 10).Value = "";
                 }
 
-                ws.Cell(r, 11).Value = i.Status;
+                ws.Cell(r, 11).Value = i.Status ?? "";
                 r++;
             }
 
@@ -265,7 +303,6 @@ namespace StajyerTakip.Controllers
             using var stream = file.OpenReadStream();
             using var reader = new StreamReader(stream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true);
 
-            // header
             if (!reader.EndOfStream) await reader.ReadLineAsync();
 
             string? line;

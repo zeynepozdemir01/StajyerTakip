@@ -3,12 +3,14 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 
 using MediatR;
 using StajyerTakip.Application;                 
-using StajyerTakip.Infrastructure.Data;
-using StajyerTakip.Application.Interfaces;
-using StajyerTakip.Infrastructure.Repositories;
-using StajyerTakip.Services;
+using StajyerTakip.Infrastructure.Data;         
+using StajyerTakip.Infrastructure.Repositories; 
+using StajyerTakip.Services;                    
 using StajyerTakip.Data;                        
-using StajyerTakip.Middlewares;                 
+using StajyerTakip.Middlewares;  
+using StajyerTakip.Infrastructure.Security; 
+using StajyerTakip.Application.Interfaces;  
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,7 +20,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddControllersWithViews();
 
 builder.Services.AddScoped<IInternRepository, InternRepository>();
-builder.Services.AddScoped<IInternService, InternService>();
+builder.Services.AddScoped<IUserRepository, DemoUserRepository>();
+builder.Services.AddScoped<ITokenService, JwtTokenService>();
 
 builder.Services.AddMediatR(cfg =>
 {
@@ -55,7 +58,6 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseRouting();
 
 app.UseAuthentication();
