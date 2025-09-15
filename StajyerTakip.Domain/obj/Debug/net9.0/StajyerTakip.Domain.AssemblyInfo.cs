@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("StajyerTakip.Domain")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+61bd4b0d9f8ddfd022bf8546de564b11a8a3173b")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c0292e89e126fe3fd8c619411664524648060a72")]
 [assembly: System.Reflection.AssemblyProductAttribute("StajyerTakip.Domain")]
 [assembly: System.Reflection.AssemblyTitleAttribute("StajyerTakip.Domain")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

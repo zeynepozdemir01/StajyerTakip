@@ -1,19 +1,27 @@
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 using StajyerTakip.Application.Interfaces;
 
-public sealed class DemoUserRepository : IUserRepository
+namespace StajyerTakip.Infrastructure.Security
 {
-    private sealed record DemoUser(int Id, string Email, string PasswordHash, string Role);
-
-    private static readonly List<DemoUser> _users =
-    [
-        new(1, "admin@demo.com", "admin123", "Admin"),
-        new(2, "user@demo.com",  "user123",  "User")
-    ];
-
-    public Task<(int Id, string Email, string PasswordHash, string Role)?> GetByEmailAsync(string email)
+    public class DemoUserRepository : IUserRepository
     {
-        var u = _users.FirstOrDefault(x => x.Email.Equals(email, StringComparison.OrdinalIgnoreCase));
-        if (u is null) return Task.FromResult<(int, string, string, string)?>(null);
-        return Task.FromResult<(int, string, string, string)?>((u.Id, u.Email, u.PasswordHash, u.Role));
+        private static readonly (int Id, string Email, string PasswordHash, string Role)[] Users =
+            new (int, string, string, string)[]
+            {
+                (1, "demo@stajyer.local", "Password123!", "Admin"),
+            };
+
+        public Task<(int Id, string Email, string PasswordHash, string Role)?> GetByEmailAsync(string email)
+        {
+            var match = Users.FirstOrDefault(
+                u => string.Equals(u.Email, email, StringComparison.OrdinalIgnoreCase));
+
+            if (string.IsNullOrEmpty(match.Email))
+                return Task.FromResult<(int, string, string, string)?>(null);
+
+            return Task.FromResult<(int, string, string, string)?>(match);
+        }
     }
 }

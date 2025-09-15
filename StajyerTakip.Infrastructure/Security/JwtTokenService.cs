@@ -19,7 +19,6 @@ public class JwtTokenService : ITokenService
 
     public string CreateToken(User user, DateTime now)
     {
-        // appsettings: "Jwt": { "Key": "...","Issuer":"...","Audience":"...", "ExpiresMinutes": "60" }
         var jwtSection = _config.GetSection("Jwt");
         var key = jwtSection["Key"] ?? throw new InvalidOperationException("Jwt:Key missing.");
         var issuer = jwtSection["Issuer"] ?? "StajyerTakip";
