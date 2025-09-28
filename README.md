@@ -1,85 +1,67 @@
 # StajyerTakip Uygulaması
 
-**Repo Linki:** [https://github.com/zeynepozdemir01/StajyerTakip](https://github.com/zeynepozdemir01/StajyerTakip)
+**Repo:** [https://github.com/zeynepozdemir01/StajyerTakip](https://github.com/zeynepozdemir01/StajyerTakip)
 
-Bu proje, stajyer yönetimini kolaylaştırmak amacıyla geliştirilmiş bir **ASP.NET Core MVC** uygulamasıdır.  
-Stajyerlerin bilgilerini kayıt altına almak, listelemek, düzenlemek ve dışa/içe aktarmak için kullanılabilir.  
-
+Bu proje, stajyer yönetimini kolaylaştırmak için geliştirilmiş **full-stack** bir uygulamadır.  
+Stajyerlerin kaydını tutar, listeleme / filtreleme / sıralama yapar, düzenleme ve silme işlemlerini sağlar.  
 
 ---
 
-## Teknik Mimarisi
+## Teknik Mimari
 
-**Frontend**
-- ASP.NET MVC View (Razor)
-- HTML, CSS, Bootstrap 5
-- Bootstrap Icons
-- jQuery Unobtrusive Validation (istemci tarafı doğrulama)
+### Frontend (stajyer-takip-ui)
+- **React + Vite**
+- React Router DOM (sayfa yönlendirme)
+- Axios (API istekleri)
+- Responsive tasarım (basit grid yapısı)
+- JWT ile kimlik doğrulama (Bearer Token)
+- Yetkisiz kullanıcıları login sayfasına yönlendiren `ProtectedRoute` bileşeni
 
-**Backend**
-- ASP.NET Core 8.0 (MVC pattern)
-- Katmanlı yapı (Controller + Model + Service + DbContext)
-- Cookie tabanlı Authentication / Authorization
+### Backend (StajyerTakip.Api)
+- **ASP.NET Core 8.0 Web API**
+- CQRS + MediatR kullanımı
+- JWT tabanlı Authentication / Authorization
+- Swagger/OpenAPI 3.0 ile API dokümantasyonu
+- Katmanlı Mimari (Domain, Application, Infrastructure)
 
-**Veritabanı**
-- Microsoft SQL Server
-- Entity Framework Core (Code-First, Migrations)
+### Veritabanı
+- **Microsoft SQL Server**
+- Entity Framework Core (Code-First + Migrations)
 - Unique index: `NationalId`, `Email`
+- Validation: `[Required]`, `[StringLength(11)]`, `[RegularExpression]` ile TC Kimlik kontrolü
 
 ---
 
 ## Özellikler
 
-- CRUD (Ekleme, Listeleme, Güncelleme, Silme)  
-- Form validasyonları (zorunlu alan, e-posta formatı, TC kimlik kontrolü, tarih kuralları)  
-- Listeleme sayfasında:
-  - Arama (Ad, Soyad, Email, Telefon, Okul, Bölüm)  
-  - Durum filtresi (Aktif / Pasif)  
-  - Sayfalama ve sıralama  
-- Dışa aktarma:
-  - CSV formatında indirme  
-  - Excel (.xlsx) formatında indirme  
-- İçe aktarma:
-  - CSV dosyasından toplu stajyer yükleme  
-  - CSV şablon indirilebilme  
-- Kullanıcı girişi:
-  - Login / Logout  
-  - Cookie tabanlı kimlik doğrulama  
-  - Basit konfigürasyon (`appsettings.json` → `Auth:Username` & `Auth:Password`)  
+**JWT Login / Logout**  
+**CRUD** – Ekleme, Listeleme, Güncelleme, Silme  
+**Arama, filtreleme, sayfalama ve sıralama**  
+**Kullanıcı koruması** – Token olmadan listeye erişim engellenir  
+**Swagger UI** – API testleri kolayca yapılabilir  
+**React UI** – Modern, SPA tabanlı frontend  
 
 ---
 
 ## Proje Yapısı
 
 StajyerTakip/
-├── Controllers/
-│   ├── AccountController.cs
-│   └── InternsController.cs
-├── Data/
-│   ├── AppDbContext.cs
-│   └── DbSeeder.cs
-├── Models/
-│   ├── Intern.cs
-│   └── ViewModels/
-│       ├── InternListVm.cs
-│       ├── LoginVm.cs
-│       └── ImportResultVm.cs
-├── Services/
-│   ├── IInternService.cs
-│   └── InternService.cs
-├── Views/
-│   ├── Interns/ (Index, Create, Edit, Details, Delete, UploadCsv, …)
-│   ├── Account/ (Login, AccessDenied)
-│   └── Shared/ (_Layout.cshtml, _ValidationScriptsPartial.cshtml)
-└── wwwroot/ (css, js, bootstrap, icons)
+├── StajyerTakip.Api/ # Web API katmanı
+├── StajyerTakip.Application/ # CQRS + business logic
+├── StajyerTakip.Domain/ # Entity ve Validation
+├── StajyerTakip.Infrastructure/# EF Core, DbContext, Repository
+├── stajyer-takip-ui/ # React uygulaması
+└── README.md
 
 ---
 
-## Kurulum
+## Backend Kurulum
 
 1. Gereklilikler  
    - .NET 8 SDK  
    - SQL Server (Express, LocalDB veya kurumsal)  
+   - Node.js (16+ sürüm) ve npm
+   - Tarayıcı: Chrome / Edge (React dev server için önerilir)
 
 2. Bağımlılıkların yüklenmesi  
 ```bash
@@ -88,7 +70,7 @@ dotnet restore
 
 3. Veritabanı migration işlemi  
 ```bash
-dotnet ef database update
+dotnet ef database update -p StajyerTakip.Infrastructure -s StajyerTakip.Api
 ```
 
 4. Konfigürasyon (`appsettings.json`)  
@@ -97,35 +79,62 @@ dotnet ef database update
   "ConnectionStrings": {
     "Default": "Server=.;Database=StajyerTakipDb;Trusted_Connection=True;TrustServerCertificate=True;"
   },
-  "Auth": {
-    "Username": "admin",
-    "Password": "12345",
-    "DisplayName": "Admin Kullanıcı"
+  "Jwt": {
+    "Issuer": "StajyerTakip",
+    "Audience": "StajyerTakipClient",
+    "Secret": "supersecretkey123456789"
   }
 }
 ```
 
 5. Çalıştırma  
 ```bash
-dotnet run
+dotnet run 
 ```
 Uygulama çalıştırıldıktan sonra tarayıcıda https://localhost:{port} adresi üzerinden erişilebilir.
 ({port} bilgisayarda rastgele atanabilir, örn: 7281 veya 5281)
 
+```bash
+dotnet run --project StajyerTakip.Api --launch-profile https
+```
+Swagger’a şu adresten eriş:
+https://localhost:7007/swagger
+
 
 6. Giriş  
 - Kullanıcı adı: `admin`  
-- Şifre: `12345`  
+- Şifre: `12345` 
 
 ---
 
-## Notlar
+## Frontend (React UI) Kurulum
 
-- CSV içe aktarma için şablon dosya indirilebilir: `/Interns/DownloadCsvTemplate`.  
-- Proje, temel işlevler için hazırdır. Geliştirmeler (grafikler, dashboard, roller bazlı yetkilendirme vb.) isteğe bağlı olarak eklenebilir.  
-- Kod yapısı MVC prensiplerine uygun olup okunabilirlik gözetilmiştir.  
+1. React projesi dizinine geç
+cd stajyer-takip-ui
+
+2. Bağımlılıkları yükle
+npm install
+
+3. Çevre değişkeni ayarla (.env dosyası oluştur)
+VITE_API_URL=https://localhost:7007/api
+
+4. Çalıştır
+npm run dev
+Tarayıcıda şu adrese git:
+http://localhost:5173
+
+---
+
+## Giriş Bilgileri
+
+Email: demo@stajyer.local
+
+Şifre: Password123!
+
+Başarılı girişten sonra token localStorage’a kaydedilir.
+API çağrıları otomatik olarak Authorization: Bearer <token> başlığı ile yapılır.
 
 ---
 
 **Geliştirici:** İrem Zeynep Özdemir  
-**Tarih:** 05.09.2025
+**Tarih:** 29.09.2025
